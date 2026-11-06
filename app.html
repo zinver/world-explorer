@@ -416,7 +416,7 @@ function cardSVG(kind, forExport, withZoom){
     ? (S.name ? `${S.name}-এর ${isMY?'মালয়েশিয়া':isBD?'বাংলাদেশ':'বিশ্ব'}` : (isMY?'আমার মালয়েশিয়া':isBD?'আমার বাংলাদেশ':'আমার বিশ্ব'))
     : (S.name ? `${S.name}'s ${isMY?'Malaysia':isBD?'Bangladesh':'World'}` : (isMY?'My Malaysia':isBD?'My Bangladesh':'My World'));
   const label = isRV ? (bn ? 'ভ্রমণকারীদের রিভিউ' : 'Traveller reviews') : isPlan ? (bn ? 'ভ্রমণ পরিকল্পনা' : 'Travel wishlist') : bn ? (isMY?'মালয়েশিয়া ভ্রমণ মানচিত্র':isBD?'বাংলাদেশ ভ্রমণ মানচিত্র':'বিশ্ব ভ্রমণ মানচিত্র') : (isMY?'Malaysia travel map':isBD?'Bangladesh travel map':'World travel map');
-  const pctTxt = isRV ? (bn ? `${dig(count)}টি দেশের রিভিউ আছে` : `${count} ${count===1?'country has':'countries have'} reviews`) : isPlan ? (bn ? `${dig(pct)}% ${tr('planPct')}` : `${pct}% ${tr('planPct')}`) : bn ? (isMY ? `${dig(pct)}% মালয়েশিয়া ঘোরা হয়েছে` : isBD ? `${dig(pct)}% বাংলাদেশ ঘোরা হয়েছে` : `বিশ্বের ${dig(pct)}% দেশ ঘোরা হয়েছে`)
+  const pctTxt = isRV ? (bn ? `${dig(count)}টি দেশের রিভিউ আছে` : `${count} ${count===1?'country has':'countries have'} reviews`) : isPlan ? (bn ? `${dig(pct)}% ${esc(tr('planPct'))}` : `${pct}% ${esc(tr('planPct'))}`) : bn ? (isMY ? `${dig(pct)}% মালয়েশিয়া ঘোরা হয়েছে` : isBD ? `${dig(pct)}% বাংলাদেশ ঘোরা হয়েছে` : `বিশ্বের ${dig(pct)}% দেশ ঘোরা হয়েছে`)
                     : (isMY ? `${pct}% of Malaysia explored` : isBD ? `${pct}% of Bangladesh explored` : `${pct}% of the world's countries visited`);
   const showPhoto = S.photo && !isRV, tx0 = showPhoto ? 190 : 70;
   const tsize = title.length > 20 ? 44 : title.length > 14 ? 54 : 64;
@@ -445,11 +445,11 @@ function cardSVG(kind, forExport, withZoom){
   <text x="1010" y="170" text-anchor="end" font-size="40" fill="${t.sub}" font-weight="700">/${dig(total)}</text>
   <text x="${1010 - (String(total).length+1)*24 - 12}" y="170" text-anchor="end" font-size="110" font-weight="800" fill="${accC}">${dig(count)}</text>
   ${withZoom ? `<defs><clipPath id="mc"><rect x="0" y="215" width="1080" height="909"/></clipPath></defs><g clip-path="url(#mc)"><g id="mapZ" transform="${zAttr(kind)}">${map}</g></g>` : `<g>${map}</g>`}
-  ${isPlan ? `<circle cx="82" cy="1136" r="11" fill="${t.acc}"/><text x="102" y="1144" font-size="26" fill="${t.tx}">${tr('legVisited')}</text><circle cx="${bn?330:290}" cy="1136" r="11" fill="${t.pl}"/><text x="${bn?350:310}" y="1144" font-size="26" fill="${t.tx}">${tr('legPlan')}</text>` : ''}
+  ${isPlan ? `<circle cx="82" cy="1136" r="11" fill="${t.acc}"/><text x="102" y="1144" font-size="26" fill="${t.tx}">${esc(tr('legVisited'))}</text><circle cx="${bn?330:290}" cy="1136" r="11" fill="${t.pl}"/><text x="${bn?350:310}" y="1144" font-size="26" fill="${t.tx}">${esc(tr('legPlan'))}</text>` : ''}
   <rect x="70" y="1175" width="940" height="12" rx="6" fill="${t.land}"/>
   <rect x="70" y="1175" width="${Math.max(count?12:0, 940*count/total).toFixed(1)}" height="12" rx="6" fill="${accC}"/>
-  <text x="70" y="1235" font-size="28" font-weight="700" fill="${t.tx}">${pctTxt}</text>
-  <text x="1010" y="1235" text-anchor="end" font-size="24" fill="${t.sub}">${sub2}</text>
+  <text x="70" y="1235" font-size="28" font-weight="700" fill="${t.tx}">${esc(pctTxt)}</text>
+  <text x="1010" y="1235" text-anchor="end" font-size="24" fill="${t.sub}">${esc(sub2)}</text>
   <line x1="70" y1="1280" x2="1010" y2="1280" stroke="${t.land}" stroke-width="2"/>
   <text x="540" y="1322" text-anchor="middle" font-size="24" font-weight="700" fill="${t.tx}">${esc(BRAND)}<tspan font-weight="400" fill="${t.sub}">  ·  ${esc(location.host)}</tspan></text>
 </svg>`;
@@ -538,11 +538,11 @@ async function save(){
 }
 function renderLink(){
   const b = $('linkBody');
-  if(!me){ b.innerHTML = `<p class="tip" style="margin:8px 0 0;text-align:left">${tr('pickToStart')}</p>`; return; }
+  if(!me){ b.innerHTML = `<p class="tip" style="margin:8px 0 0;text-align:left">${esc(tr('pickToStart'))}</p>`; return; }
   const url = uLink(me.id);
   const acct = !!me.account;
   b.innerHTML = `<div class="linkbox">${esc(url)}</div>
-    <div class="btns"><button class="btn" id="cpLink">${tr('copyLink')}</button>${acct ? '' : `<button class="btn alt" id="cpEdit">${tr('copyEdit')}</button>`}</div>
+    <div class="btns"><button class="btn" id="cpLink">${esc(tr('copyLink'))}</button>${acct ? '' : `<button class="btn alt" id="cpEdit">${esc(tr('copyEdit'))}</button>`}</div>
     <p class="tip" style="text-align:left">${tr(acct ? 'accountNote' : 'linkNote')}</p>`;
   $('cpLink').onclick = () => copy(url, $('cpLink'));
   if(!acct) $('cpEdit').onclick = () => copy(eLink(me.id, me.token), $('cpEdit'));
