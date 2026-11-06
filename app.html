@@ -1,0 +1,874 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>My Travel Map</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/lists.js"></script>
+<script src="/bn.js"></script>
+<script src="/posts.js"></script>
+<meta name="color-scheme" content="light dark">
+<script>try{var m=localStorage.getItem("tm_mode")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.dataset.mode=m}catch(e){}</script>
+<style>
+:root{color-scheme:light;--bg:#f8f6f1;--card:#fff;--chip:#f1ece3;--ink:#17201c;--mut:#6b726d;--line:#e7e2d8;--acc:#0f7a52;--pillbg:#e3f1ea;--pillink:#0f7a52}
+[data-mode=dark]{color-scheme:dark;--bg:#0f1216;--card:#1a1e25;--chip:#262b34;--ink:#eef0f2;--mut:#98a1ab;--line:#2c323c;--acc:#2fb883;--pillbg:#173a2c;--pillink:#5fe0ae}
+button{color:var(--ink)}
+.wrap{position:relative}.top{flex-wrap:wrap;display:flex;align-items:center;justify-content:space-between;gap:10px;margin:4px 0 14px}.top h1{margin:0}
+.ctl{display:flex;align-items:center;gap:10px}
+.langb{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 14px;font:700 14px inherit;font-family:inherit}
+.sw{width:58px;height:32px;border-radius:999px;border:2px solid var(--ink);background:var(--chip);position:relative;padding:0;cursor:pointer;transition:background .25s}
+.sw i{position:absolute;top:2px;left:2px;width:24px;height:24px;border-radius:50%;background:var(--ink);color:var(--card);display:grid;place-items:center;font-style:normal;font-size:14px;transition:transform .25s cubic-bezier(.5,1.6,.5,1)}
+[data-mode=dark] .sw i{transform:translateX(26px)}
+.sheet{position:fixed;inset:0;background:#0007;z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheetBox{background:var(--card);width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:26px 26px 0 0;padding:20px}
+#sheetPrev{line-height:0;margin:16px 0;border-radius:16px;overflow:hidden}
+#sheetPrev svg{max-height:42vh;width:auto;max-width:100%;margin:0 auto;display:block}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:560px;margin:0 auto;padding:16px 16px 48px}
+h1{font-size:20px;margin:4px 0 14px}
+.tabs{display:flex;background:var(--chip);border-radius:18px;padding:5px;gap:4px;margin-bottom:14px}
+.tabs button{flex:1;border:0;background:none;padding:12px;border-radius:14px;font:600 15px inherit;font-family:inherit;color:var(--mut)}
+.tabs button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px #0001}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:26px;padding:20px;margin-bottom:14px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.panel h2{font-size:20px;margin:0}
+.pill{background:var(--pillbg);color:var(--pillink);font-weight:700;border-radius:999px;padding:6px 14px;font-size:15px}
+input[type=search],input[type=text]{color:var(--ink);width:100%;border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:14px 18px;font:inherit;margin:14px 0 8px}
+.links{display:flex;gap:16px;margin:6px 0 4px}
+.lnk{background:none;border:0;padding:0;font:inherit;color:var(--mut);text-decoration:underline;text-underline-offset:3px}
+.grp{border-top:1px solid var(--line);margin-top:14px;padding-top:14px}
+.grp .row{margin-bottom:10px}
+.grp b{font-size:16px}.grp small{color:var(--mut);font-weight:700;margin-left:4px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:0;background:var(--chip);color:var(--ink);border-radius:999px;padding:12px 18px;font:inherit}
+.chip.on{background:#6c7bff;color:#fff}
+.chip.on::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:#fff;margin-right:9px;vertical-align:middle}
+.themes{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.dot{width:40px;height:40px;border-radius:50%;border:3px solid transparent;padding:0;position:relative;overflow:hidden;background:var(--c1)}
+.dot::after{content:"";position:absolute;right:-4px;bottom:-4px;width:22px;height:22px;border-radius:50%;background:var(--c2)}
+.dot.on{outline:3px solid #111;outline-offset:2px}
+.photo{color:var(--ink);display:inline-flex;align-items:center;gap:12px;border:1.5px dashed var(--line);border-radius:16px;padding:10px 16px;background:none;font:inherit;margin:14px 0 0;cursor:pointer}
+.photo i{width:38px;height:38px;border-radius:12px;background:var(--chip);display:grid;place-items:center;overflow:hidden}
+.photo i img{width:100%;height:100%;object-fit:cover}
+label.chk{display:flex;gap:12px;align-items:center;margin-top:4px}
+label.chk input{width:26px;height:26px;accent-color:var(--acc)}
+#card{border-radius:26px;overflow:hidden;line-height:0;margin-top:16px;touch-action:manipulation}
+#card svg{width:100%;height:auto;display:block}
+.tip{color:var(--mut);text-align:center;margin:12px 0 0;font-size:15px}
+.dl{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.dl button{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:18px;font:700 18px inherit;font-family:inherit}
+.dl button.wide{grid-column:1/3}
+.btn{border:0;background:var(--acc);color:#fff;border-radius:999px;padding:14px 22px;font:700 16px inherit;font-family:inherit}
+.btn.alt{background:var(--chip);color:var(--ink)}.btn{color:#fff}.btn.alt{color:var(--ink)}
+.linkbox{word-break:break-all;background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:10px 0;font-size:15px}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.status{color:var(--mut);font-size:14px;margin-top:8px;min-height:18px}
+.err{color:#b3261e;margin:10px 0}
+.hide{display:none!important}
+.menu{position:absolute;right:16px;top:64px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;z-index:15;box-shadow:0 8px 24px #0003}
+.langb img{width:24px;height:24px;border-radius:50%;display:block}
+.tabs button{padding:11px 2px;font-size:14px}
+.chip.dis{opacity:.35;text-decoration:line-through}
+.chip.on.plan{background:#f0a020;color:#1a1a1a}.chip.on.plan::before{background:#1a1a1a}
+.qbox h2{font-size:22px;line-height:1.3;margin:10px 0 16px}
+.qopt{display:block;width:100%;text-align:left;border:1.5px solid var(--line);background:var(--bg);border-radius:16px;padding:15px 16px;margin:0 0 10px;font:inherit;font-size:16px}
+.qopt.ok{background:#1f9d62;border-color:#1f9d62;color:#fff}.qopt.bad{background:#d64545;border-color:#d64545;color:#fff}
+.qbar{height:8px;border-radius:6px;background:var(--chip);overflow:hidden}.qbar i{display:block;height:100%;background:var(--acc)}
+.qbig{font-size:64px;font-weight:800;text-align:center;margin:12px 0 4px}
+a.home{color:inherit;text-decoration:none}
+.vsw{display:flex;background:var(--chip);border-radius:14px;padding:4px;gap:4px;margin-bottom:12px}
+.vsw button{flex:1;border:0;background:none;padding:9px;border-radius:11px;font-weight:600;font-size:14px;font-family:inherit;color:var(--mut)}
+.vsw button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px #0001}
+#globeWrap{border-radius:26px;overflow:hidden;line-height:0;display:flex;justify-content:center}
+#globeCv{touch-action:none;cursor:grab;display:block;max-width:100%}
+#globeCv:active{cursor:grabbing}
+.legend{display:flex;gap:20px;justify-content:center;margin-top:12px;font-size:14px;flex-wrap:wrap}
+.legend span{display:flex;align-items:center;gap:8px}
+.legend i{width:14px;height:14px;border-radius:50%;display:inline-block;background:var(--lg)}
+
+/* ---- layout: two columns on wide screens (picker left, card right) ---- */
+.tabs{max-width:640px;margin-left:auto;margin-right:auto}
+#cardPanel>*{max-width:600px;margin-left:auto;margin-right:auto}
+.main:not(:has(.colL > .panel:not(.hide))) .colL{display:none}
+#groups{max-height:52vh;overflow:auto;padding-right:6px;overscroll-behavior:contain}
+@media (min-width:900px){
+  .wrap{max-width:1180px;padding-left:28px;padding-right:28px}
+  .main{display:grid;grid-template-columns:minmax(320px,400px) minmax(0,1fr);gap:20px;align-items:start}
+  .main:not(:has(.colL > .panel:not(.hide))){grid-template-columns:minmax(0,640px);justify-content:center}
+  #groups{max-height:min(62vh,560px);overflow:auto;padding-right:6px;overscroll-behavior:contain}
+  #designPanel{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px}
+  #designPanel .themes{flex-basis:100%}
+  #designPanel .photo{margin:0}
+  #designPanel #nameIn{flex:1 1 180px;width:auto;margin:0}
+  #designPanel label.chk{margin:0}
+  #designPanel .status{flex-basis:100%;margin:0}
+}
+#cardBox{position:relative}
+.zc{position:absolute;right:12px;top:28px;display:flex;flex-direction:column;gap:6px}
+.zc button{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:700 20px/1 system-ui;padding:0;box-shadow:0 1px 4px #0003;cursor:pointer}
+.zc button:disabled{opacity:.4;cursor:default}
+#card svg{touch-action:pan-y}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><a href="/" class="home" aria-label="Home"><h1 id="appTitle"></h1></a><div class="ctl"><button class="langb" id="authBtn"></button><button class="langb" id="langBtn"></button><button class="sw" id="modeBtn" role="switch" aria-label="Dark mode"><i id="modeI">☀</i></button></div></div>
+  <div id="userMenu" class="menu hide"></div>
+  <div id="banner" class="panel hide"></div>
+  <div class="tabs" id="tabs">
+    <button data-t="bd" class="on" data-i="bd"></button>
+    <button data-t="my" data-i="my"></button>
+    <button data-t="world" data-i="world"></button>
+    <button data-t="plan" data-i="plan"></button>
+    <button data-t="review" data-i="rev"></button>
+  </div>
+
+  <div class="main">
+  <div class="colL">
+  <div id="linkPanel" class="panel hide">
+    <h2 data-i="yourLink"></h2>
+    <div id="linkBody"></div>
+  </div>
+
+  <div id="pickPanel" class="panel hide">
+    <div class="row"><h2 id="pickTitle"></h2><span class="pill" id="pickCount"></span></div>
+    <input type="search" id="q" placeholder="Search…" autocomplete="off">
+    <div class="links"><button class="lnk" id="selAll" data-i="selAll"></button><button class="lnk" id="clrAll" data-i="clrAll"></button></div>
+    <div id="groups"></div>
+  </div>
+
+  </div>
+  <div class="colR">
+  <div id="designPanel" class="panel hide">
+    <div class="themes" id="themes"><span style="color:var(--mut)" data-i="theme"></span></div>
+    <button class="photo" id="photoBtn"><i id="photoI">👤</i><span id="photoTxt"></span></button>
+    <input type="file" accept="image/*" id="photoIn" class="hide">
+    <input type="text" id="nameIn" maxlength="40" placeholder="Your name (optional)">
+    <label class="chk"><input type="checkbox" id="namesChk"><span id="namesLbl"></span></label>
+    <div class="status" id="status"></div>
+  </div>
+
+
+  <div class="panel" id="cardPanel">
+    <div id="geoErr" class="err hide"></div>
+    <div class="vsw hide" id="interSwitch"><button data-m="pick" data-i="p_pick"></button><button data-m="posts" data-i="p_posts"></button></div>
+    <div id="postBar" class="hide"><button class="btn" id="newPost" data-i="p_write"></button></div>
+    <div class="vsw hide" id="viewSwitch"><button data-v="flat" data-i="viewFlat"></button><button data-v="globe" data-i="viewGlobe"></button></div>
+    <div id="cardBox"><div id="card"></div><div id="zoomCtl" class="zc"><button id="zIn" aria-label="Zoom in">+</button><button id="zOut" aria-label="Zoom out">−</button><button id="zReset" aria-label="Reset zoom" disabled>⟲</button></div></div>
+    <div id="globeWrap" class="hide"><canvas id="globeCv" aria-label="Globe"></canvas></div>
+    <div id="legend" class="legend hide"><span><i id="lgA"></i><b data-i="legVisited"></b></span><span><i id="lgB"></i><b data-i="legPlan"></b></span></div>
+    <p class="tip" id="tip"></p>
+    <div id="dlBlock">
+      <h2 style="margin-top:22px" data-i="dlTitle"></h2>
+      <div class="dl">
+        <button data-f="png">↓ PNG</button><button data-f="jpg">↓ JPG</button><button data-f="pdf" class="wide">↓ PDF</button>
+      </div>
+      <div class="dl" id="shareRow" style="margin-top:12px">
+        <button id="shNative" class="wide" data-i="sharePost"></button>
+        <button id="shFb" data-i="fb"></button><button id="shWa" data-i="wa"></button>
+      </div>
+    </div>
+  </div>
+
+  <div id="cta" class="panel hide" style="text-align:center"></div>
+  </div>
+  </div>
+  <div id="sheet" class="sheet hide"><div class="sheetBox">
+    <div class="row"><h2 data-i="chooseTheme"></h2><button class="lnk" id="sheetX" data-i="cancel"></button></div>
+    <div class="themes" id="sheetThemes" style="margin-top:14px"></div>
+    <div id="sheetPrev"></div>
+    <button class="btn" id="sheetGo" style="width:100%"></button>
+  </div></div>
+</div>
+
+<script>
+/* ===== Config ===== */
+const SUPABASE_URL = 'https://zvkhmimhobgjqtemyaaq.supabase.co';   // <- paste yours
+const SUPABASE_ANON_KEY = 'sb_publishable_jz8efFuFAfN4sqo7XQLmsw_mJB9PVWr';              // <- paste yours (anon/publishable key, safe in the browser)
+const MY_URL = '/my.json';   // Malaysia states GeoJSON, saved next to app.html
+const BD_URL = '/bd.json';   // the district GeoJSON file, saved in the same folder as app.html
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Pretty links (/u/ID) need a host with rewrites. On Live Server / file we use ?u=ID instead.
+const LOCAL = ['127.0.0.1','localhost',''].includes(location.hostname);
+const uLink = id => LOCAL ? location.origin + '/app.html?u=' + id : location.origin + '/u/' + id;
+const eLink = (id, t) => (LOCAL ? location.origin + '/app.html?e=' + id : location.origin + '/e/' + id) + '#' + t;
+const isDemo = () => SUPABASE_URL.indexOf('YOUR-PROJECT') >= 0;   // true until you paste your Supabase keys: everything is kept on this device only
+async function rpc(fn, args){
+  const { data, error } = await sb.rpc(fn, args || {});
+  if(error) throw error;
+  return data;
+}
+let user = null;
+const BRAND = 'My Travel Map';              // shown at the bottom of the card
+const WORLD_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json';
+const THEMES = [
+  {bg:'#f6f3ec',land:'#e2dccd',acc:'#0f7a52',tx:'#1a1a1a',sub:'#6b6b6b',pl:'#e8a317',c1:'#f1ece3',c2:'#0f7a52'},
+  {bg:'#1b1a3a',land:'#2b2a5e',acc:'#6c7bff',tx:'#ffffff',sub:'#a9a8d4',pl:'#ff9f5a',c1:'#1b1a3a',c2:'#6c7bff'},
+  {bg:'#fff1ea',land:'#f1dccf',acc:'#f2542d',tx:'#2a1a14',sub:'#8a6a5c',pl:'#7a5cf0',c1:'#fff1ea',c2:'#f2542d'},
+  {bg:'#eaf2ff',land:'#cfdcf0',acc:'#1565e8',tx:'#0e1a33',sub:'#5b6b8a',pl:'#f2a900',c1:'#eaf2ff',c2:'#1565e8'},
+  {bg:'#111418',land:'#23282f',acc:'#1fbf75',tx:'#ffffff',sub:'#8d97a3',pl:'#ff7a59',c1:'#111418',c2:'#1fbf75'}
+];
+const L = window.LISTS;
+const TOTAL = {bd:64, my:16, world:194, plan:194, review:194};
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let lang = localStorage.getItem('tm_lang') || 'en';
+const tr = k => (I18N[lang][k] ?? I18N.en[k] ?? k);
+const nm = k => lang==='bn' ? (BN[k]||k) : k;
+const dig = n => lang==='bn' ? String(n).replace(/\d/g,d=>'০১২৩৪৫৬৭৮৯'[d]) : String(n);
+const divName = n => lang==='bn' ? (BN[n]||n)+' বিভাগ' : n+' Division';
+const norm = s => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z]/g,'');
+
+/* ===== State ===== */
+const S = {tab:'bd', theme:1, name:'', photo:'', bd:new Set(), my:new Set(), world:new Set(), plan:new Set(), names:{bd:true, my:true, world:true, plan:true}};
+let me = null; try { me = JSON.parse(localStorage.getItem('tm_me')); } catch(_) {}
+let mode = 'owner', viewId = null;
+const G = {bd:null, my:null, world:null};   // prepared geometry
+
+/* ===== Geometry prep ===== */
+const DAL = {barisal:'barishal',bogra:'bogura',chittagong:'chattogram',comilla:'cumilla',jessore:'jashore',kishoreganj:'kishorganj',
+  maulvibazar:'moulvibazar',moulavibazar:'moulvibazar',nawabganj:'chapainawabganj',jhalakathi:'jhalokati',jhalakati:'jhalokati',
+  jhenidah:'jhenaidah',jaipurhat:'joypurhat',netrakona:'netrokona',hobiganj:'habiganj',coxbazar:'coxsbazar',brahamanbaria:'brahmanbaria',
+  khagrachari:'khagrachhari',khagrachhari:'khagrachhari',laksmipur:'lakshmipur',narsinghdi:'narsingdi'};
+const DN = L.DISTRICTS.map(n => [norm(n), n]);
+function lev(a,b){const m=a.length,n=b.length;let p=Array.from({length:n+1},(_,i)=>i);for(let i=1;i<=m;i++){let c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c}return p[n]}
+function resolveD(v){
+  if(typeof v!=='string') return null;
+  let n = norm(v).replace(/(district|zila|zilla)$/,''); n = DAL[n] || n;
+  const e = DN.find(x => x[0]===n); if(e) return e[1];
+  let best=null, bd=3; for(const x of DN){const d=lev(n,x[0]); if(d<bd){bd=d;best=x[1]}}
+  return best;
+}
+const WAL = {turkiye:'turkey',unitedstates:'unitedstatesofamerica',czechrepublic:'czechia',macedonia:'northmacedonia',swaziland:'eswatini',capeverde:'caboverde',ivorycoast:'cotedivoire'};
+const CN = new Map(L.COUNTRIES.map(n => [norm(n), n]));
+function resolveC(v){ let n = norm(v); n = WAL[n] || n; return CN.get(n) || null; }
+
+function centroid(f, path){
+  if(f.geometry.type==='MultiPolygon'){
+    let best=null, ba=-1;
+    for(const c of f.geometry.coordinates){const g={type:'Polygon',coordinates:c}; const a=path.area(g); if(a>ba){ba=a;best=g}}
+    return path.centroid(best);
+  }
+  return path.centroid(f);
+}
+const BOX = [[50,340],[1030,1120]];   // map area inside the 1080x1350 card
+
+async function prepBD(){
+  const res = await fetch(BD_URL);
+  if(!res.ok) throw new Error('bd.json not found. Put the district GeoJSON file in the same folder as app.html and name it bd.json');
+  const gj = await res.json();
+  if(!gj.features) throw new Error('Bad district data');
+  const f0 = gj.features[0].properties;
+  let key=null, bs=-1;
+  for(const k of Object.keys(f0).filter(k=>typeof f0[k]==='string')){
+    let s=0; for(const f of gj.features) if(resolveD(f.properties[k])) s++;
+    if(s>bs){bs=s;key=k}
+  }
+  if(bs<50) throw new Error('Could not match district names in map data');
+  const by = {};
+  for(const f of gj.features){ const n = resolveD(f.properties[key]); if(n) (by[n] ||= []).push(f); }
+  const all = {type:'FeatureCollection', features:Object.values(by).flat()};
+  const proj = d3.geoMercator().fitExtent(BOX, all);
+  const path = d3.geoPath(proj);
+  const items = Object.entries(by).map(([k, fs]) => {
+    const big = fs.reduce((a,b)=> path.area(b)>path.area(a)?b:a);
+    return {k, d: fs.map(f=>path(f)).join(''), c: centroid(big, path)};
+  });
+  G.bd = {items, land:[]};
+}
+/* Malaysia: match whatever names the map file uses to our 16 names */
+const SN = L.STATES.map(n => [norm(n), n]);
+const SAL = {pulaupinang:'penang',malacca:'melaka',trengganu:'terengganu',johordarultakzim:'johor',kualalumpur:'kualalumpur',
+  wpkualalumpur:'kualalumpur',wplabuan:'labuan',wpputrajaya:'putrajaya',federalterritoryofkualalumpur:'kualalumpur',
+  federalterritoryoflabuan:'labuan',federalterritoryofputrajaya:'putrajaya',negrisembilan:'negerisembilan'};
+function resolveS(v){
+  if(v==null) return null;
+  let n = norm(v).replace(/^wilayahpersekutuan/,'').replace(/^federalterritoryof/,'');
+  n = SAL[n] || n;
+  const hit = SN.find(x => x[0]===n); if(hit) return hit[1];
+  let best=null, bd=3; for(const x of SN){ const d=lev(n,x[0]); if(d<bd){bd=d;best=x[1]} }
+  return best;
+}
+async function prepMY(){
+  const res = await fetch(MY_URL);
+  if(!res.ok) throw new Error('my.json not found. Put the Malaysia states GeoJSON file in the same folder as app.html and name it my.json');
+  const gj = await res.json();
+  if(!gj.features) throw new Error('Bad Malaysia map data');
+  const f0 = gj.features[0].properties || {};
+  let key=null, bs=-1;
+  for(const k of Object.keys(f0).filter(k=>typeof f0[k]==='string')){
+    let s=0; for(const f of gj.features) if(resolveS(f.properties[k])) s++;
+    if(s>bs){bs=s;key=k}
+  }
+  if(bs<12) throw new Error('Could not match state names in the Malaysia map data');
+  const by = {};
+  for(const f of gj.features){ const n = resolveS(f.properties[key]); if(n) (by[n] ||= []).push(f); }
+  const all = {type:'FeatureCollection', features:Object.values(by).flat()};
+  const proj = d3.geoMercator().fitExtent([[50,420],[1030,1060]], all);
+  const path = d3.geoPath(proj);
+  const items = Object.entries(by).map(([k, fs]) => {
+    const big = fs.reduce((a,b)=> path.area(b)>path.area(a)?b:a);
+    const area = fs.reduce((s,f)=> s+path.area(f), 0);
+    return {k, d: fs.map(f=>path(f)).join(''), c: centroid(big, path), tiny: area < 500};
+  });
+  G.my = {items, land:[]};
+}
+async function prepWorld(){
+  const topo = await (await fetch(WORLD_URL)).json();
+  const fc = topojson.feature(topo, topo.objects.countries);
+  const feats = fc.features.filter(f => f.properties.name !== 'Antarctica');
+  const proj = d3.geoNaturalEarth1().fitExtent([[30,400],[1050,1000]], {type:'FeatureCollection',features:feats});
+  const path = d3.geoPath(proj);
+  const items=[], land=[], seen=new Set();
+  for(const f of feats){
+    const k = resolveC(f.properties.name);
+    if(k && !seen.has(k)){ seen.add(k); items.push({k, d:path(f), c:centroid(f,path)}); }
+    else land.push(path(f));
+  }
+  G.world = {items, land};
+  const seenG = new Set();
+  G.globe = fc.features.map(f => {
+    let k = resolveC(f.properties.name); if(k && seenG.has(k)) k = null; if(k) seenG.add(k);
+    return {k, f, lo: {type:'Feature', geometry: f.geometry ? liteGeom(f.geometry, .35) : null}, c: bigCentroid(f)};
+  });
+}
+/* Light copy of an outline: drops points closer than `tol` degrees (invisible on the globe).
+   Every country is kept, tiny ones too. Used while the globe moves; full detail is drawn when it rests. */
+function liteGeom(g, tol){
+  const ring = r => {
+    const out = [r[0]];
+    for(let i = 1; i < r.length - 1; i++){ const p = out[out.length-1]; if(Math.hypot(r[i][0]-p[0], r[i][1]-p[1]) >= tol) out.push(r[i]); }
+    out.push(r[r.length-1]);
+    return out.length >= 4 ? out : r;
+  };
+  if(g.type === 'Polygon') return {type:'Polygon', coordinates: g.coordinates.map(ring)};
+  if(g.type === 'MultiPolygon') return {type:'MultiPolygon', coordinates: g.coordinates.map(p => p.map(ring))};
+  return g;
+}
+function bigCentroid(f){
+  const g = f.geometry; if(!g) return [0,0];
+  if(g.type==='MultiPolygon'){
+    let best=null, ba=-1;
+    for(const c of g.coordinates){ const p={type:'Polygon',coordinates:c}; const a=d3.geoArea(p); if(a>ba){ba=a;best=p;} }
+    return d3.geoCentroid(best);
+  }
+  return d3.geoCentroid(f);
+}
+
+/* ===== Card rendering ===== */
+
+/* Place place-names so they never sit on top of each other.
+   Tries the spot on the place first, then moves the name outwards (with a thin line back to the place). */
+function placeLabels(list, fs, W){
+  const tw = str => { let w = 0; for(const ch of String(str)) w += ch.charCodeAt(0) < 128 ? .58 : .74; return w * fs; };
+  const h = fs * 1.15, pad = 3, boxes = [], out = [];
+  const hit = b => boxes.some(o => b[0] < o[2] + pad && b[2] > o[0] - pad && b[1] < o[3] + pad && b[3] > o[1] - pad);
+  const dirs = [[0,1],[0,-1],[1,0],[-1,0],[1,1],[-1,1],[1,-1],[-1,-1]];
+  for(const it of list){
+    const w = tw(it.n), cx = it.x, cy = it.y;
+    const cand = [[0,0,0]];
+    for(let r = 1; r <= 12; r++) for(const [dx,dy] of dirs) cand.push([dx*(w/2 + fs*.6 + (r-1)*fs*1.1)*(dx?1:0) , dy*(h*.9 + (r-1)*h*.9), r]);
+    let pick = null;
+    for(const [ox,oy,r] of cand){
+      const mx = cx + ox, my = cy + oy;
+      const b = [mx - w/2, my - h*.72, mx + w/2, my + h*.28];
+      if(b[0] < 16 || b[2] > W - 16) continue;
+      if(!hit(b)){ pick = {x:mx, y:my, b, moved:r>0}; break; }
+    }
+    if(!pick){   // no free spot: use the least-crowded one
+      let best = null;
+      for(const [ox,oy,r] of cand){
+        const mx = cx + ox, my = cy + oy, b = [mx - w/2, my - h*.72, mx + w/2, my + h*.28];
+        if(b[0] < 16 || b[2] > W - 16) continue;
+        const area = boxes.reduce((a,o) => a + Math.max(0, Math.min(b[2],o[2]) - Math.max(b[0],o[0])) * Math.max(0, Math.min(b[3],o[3]) - Math.max(b[1],o[1])), 0);
+        if(!best || area < best.area) best = {x:mx, y:my, b, moved:r>0, area};
+      }
+      pick = best || {x:cx, y:cy, b:[cx - w/2, cy - h*.72, cx + w/2, cy + h*.28], moved:false};
+    }
+    boxes.push(pick.b); out.push({n:it.n, cx, cy, x:pick.x, y:pick.y, moved:pick.moved});
+  }
+  return out;
+}
+const zAttr = k => { const z = ZT[k]; return z ? `translate(${z.x.toFixed(2)} ${z.y.toFixed(2)}) scale(${z.k.toFixed(4)})` : ''; };
+const ZT = {};   // zoom state per tab, kept while the card is redrawn
+function cardSVG(kind, forExport, withZoom){
+  const t = THEMES[S.theme], W=1080, H=1350, isBD = kind==='bd', isMY = kind==='my', isReg = isBD||isMY, isPlan = kind==='plan', isRV = kind==='review';
+  const geo = G[isPlan||isRV?'world':kind], sel = isRV ? PostsUI.reviewed() : S[kind], total = TOTAL[kind], count = sel.size;
+  const accC = isPlan ? t.pl : t.acc;
+  const isOn = k => isPlan ? (S.world.has(k)||S.plan.has(k)) : sel.has(k);
+  const colOf = isRV ? (k => sel.has(k) ? t.acc : t.land) : k => S.world.has(k) && (isPlan||sel.has(k)) ? t.acc : (isPlan && S.plan.has(k) ? t.pl : (sel.has(k) ? t.acc : t.land));
+  const pct = count ? Math.max(1, Math.round(count/total*100)) : 0;
+  let groupsHit;
+  if(isMY) groupsHit = L.MYG.filter(g=>g.s.some(x=>sel.has(x))).length;
+  else if(isBD) groupsHit = L.DIV.filter(d=>d.d.some(x=>sel.has(x))).length;
+  else groupsHit = L.CONT.filter(c=>c.c.some(x=>sel.has(x))).length;
+  const bn = lang==='bn';
+  const sub2 = isRV ? tr('revCardSub') : isPlan ? (bn ? `${dig(count)}টি দেশ উইশলিস্টে · ${dig(S.world.size)}টি ঘোরা হয়েছে` : `${count} countries on wishlist · ${S.world.size} visited`) : bn
+    ? (isMY ? `${dig(count)}টি রাজ্য ও অঞ্চল · ৩টি অংশের মধ্যে ${dig(groupsHit)}টি` : isBD ? `${dig(count)}টি জেলা · ৮টি বিভাগের মধ্যে ${dig(groupsHit)}টি` : `${dig(count)}টি দেশ · ৬টি মহাদেশের মধ্যে ${dig(groupsHit)}টি`)
+    : (isMY ? `${count} states & territories · ${groupsHit} of 3 regions` : isBD ? `${count} districts · ${groupsHit} of 8 divisions` : `${count} countries · ${groupsHit} of 6 continents`);
+  const title = isRV ? (bn ? 'দেশের রিভিউ' : 'Country reviews') : isPlan ? (bn ? (S.name ? `${S.name}-এর ট্রিপ প্ল্যান` : 'আমার ট্রিপ প্ল্যান') : (S.name ? `${S.name}'s Trip Plan` : 'My Trip Plan')) : bn
+    ? (S.name ? `${S.name}-এর ${isMY?'মালয়েশিয়া':isBD?'বাংলাদেশ':'বিশ্ব'}` : (isMY?'আমার মালয়েশিয়া':isBD?'আমার বাংলাদেশ':'আমার বিশ্ব'))
+    : (S.name ? `${S.name}'s ${isMY?'Malaysia':isBD?'Bangladesh':'World'}` : (isMY?'My Malaysia':isBD?'My Bangladesh':'My World'));
+  const label = isRV ? (bn ? 'ভ্রমণকারীদের রিভিউ' : 'Traveller reviews') : isPlan ? (bn ? 'ভ্রমণ পরিকল্পনা' : 'Travel wishlist') : bn ? (isMY?'মালয়েশিয়া ভ্রমণ মানচিত্র':isBD?'বাংলাদেশ ভ্রমণ মানচিত্র':'বিশ্ব ভ্রমণ মানচিত্র') : (isMY?'Malaysia travel map':isBD?'Bangladesh travel map':'World travel map');
+  const pctTxt = isRV ? (bn ? `${dig(count)}টি দেশের রিভিউ আছে` : `${count} ${count===1?'country has':'countries have'} reviews`) : isPlan ? (bn ? `${dig(pct)}% ${tr('planPct')}` : `${pct}% ${tr('planPct')}`) : bn ? (isMY ? `${dig(pct)}% মালয়েশিয়া ঘোরা হয়েছে` : isBD ? `${dig(pct)}% বাংলাদেশ ঘোরা হয়েছে` : `বিশ্বের ${dig(pct)}% দেশ ঘোরা হয়েছে`)
+                    : (isMY ? `${pct}% of Malaysia explored` : isBD ? `${pct}% of Bangladesh explored` : `${pct}% of the world's countries visited`);
+  const showPhoto = S.photo && !isRV, tx0 = showPhoto ? 190 : 70;
+  const tsize = title.length > 20 ? 44 : title.length > 14 ? 54 : 64;
+  const showNames = S.names[kind] !== false;
+  const fs = isMY ? 24 : isBD ? 22 : 17;
+  let map = '';
+  if(geo){
+    map += geo.land.map(d=>`<path d="${d}" fill="${t.land}" stroke="${t.bg}" stroke-width=".5"/>`).join('');
+    map += geo.items.map(i=>`<path data-k="${esc(i.k)}" d="${i.d}" fill="${colOf(i.k)}" stroke="${t.bg}" stroke-width="${isReg?1.2:.6}" style="cursor:pointer"/>`).join('');
+    if(isMY) map += geo.items.filter(i=>i.tiny&&isFinite(i.c[0])).map(i=>`<circle data-k="${esc(i.k)}" cx="${i.c[0].toFixed(1)}" cy="${i.c[1].toFixed(1)}" r="11" fill="${colOf(i.k)}" stroke="${isOn(i.k)?t.tx:t.sub}" stroke-width="2.5" style="cursor:pointer"/>`).join('');
+    if(showNames){
+      const list = geo.items.filter(i=>isOn(i.k)&&isFinite(i.c[0])).map(i=>({n:nm(i.k), x:i.c[0], y:i.c[1]}));
+      const lab = placeLabels(list, fs, W);
+      const tf = `font-size="${fs}" font-weight="700" fill="${t.tx}" stroke="${t.bg}" stroke-width="5" paint-order="stroke" stroke-linejoin="round" text-anchor="middle" pointer-events="none"`;
+      map += lab.filter(l=>l.moved).map(l=>`<line x1="${l.cx.toFixed(1)}" y1="${l.cy.toFixed(1)}" x2="${l.x.toFixed(1)}" y2="${(l.y - fs*.3).toFixed(1)}" stroke="${t.tx}" stroke-width="1.6" stroke-opacity=".7" pointer-events="none"/><circle cx="${l.cx.toFixed(1)}" cy="${l.cy.toFixed(1)}" r="3.2" fill="${t.tx}" pointer-events="none"/>`).join('');
+      map += lab.map(l=>`<text x="${l.x.toFixed(1)}" y="${l.y.toFixed(1)}" ${tf}>${esc(l.n)}</text>`).join('');
+    }
+  }
+  const photo = showPhoto ? `<defs><clipPath id="pc"><circle cx="125" cy="130" r="55"/></clipPath></defs><image href="${S.photo}" x="70" y="75" width="110" height="110" preserveAspectRatio="xMidYMid slice" clip-path="url(#pc)"/>` : '';
+  const dims = forExport ? ` xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"` : '';
+  return `<svg viewBox="0 0 ${W} ${H}"${dims} font-family="system-ui,-apple-system,'Segoe UI',Roboto,'Noto Sans Bengali',sans-serif">
+  <rect width="${W}" height="${H}" fill="${t.bg}"/>
+  ${photo}
+  <text x="${tx0}" y="100" font-size="26" fill="${t.sub}">${label}</text>
+  <text x="${tx0}" y="170" font-size="${tsize}" font-weight="800" fill="${t.tx}">${esc(title)}</text>
+  <text x="1010" y="170" text-anchor="end" font-size="40" fill="${t.sub}" font-weight="700">/${dig(total)}</text>
+  <text x="${1010 - (String(total).length+1)*24 - 12}" y="170" text-anchor="end" font-size="110" font-weight="800" fill="${accC}">${dig(count)}</text>
+  ${withZoom ? `<defs><clipPath id="mc"><rect x="0" y="215" width="1080" height="909"/></clipPath></defs><g clip-path="url(#mc)"><g id="mapZ" transform="${zAttr(kind)}">${map}</g></g>` : `<g>${map}</g>`}
+  ${isPlan ? `<circle cx="82" cy="1136" r="11" fill="${t.acc}"/><text x="102" y="1144" font-size="26" fill="${t.tx}">${tr('legVisited')}</text><circle cx="${bn?330:290}" cy="1136" r="11" fill="${t.pl}"/><text x="${bn?350:310}" y="1144" font-size="26" fill="${t.tx}">${tr('legPlan')}</text>` : ''}
+  <rect x="70" y="1175" width="940" height="12" rx="6" fill="${t.land}"/>
+  <rect x="70" y="1175" width="${Math.max(count?12:0, 940*count/total).toFixed(1)}" height="12" rx="6" fill="${accC}"/>
+  <text x="70" y="1235" font-size="28" font-weight="700" fill="${t.tx}">${pctTxt}</text>
+  <text x="1010" y="1235" text-anchor="end" font-size="24" fill="${t.sub}">${sub2}</text>
+  <line x1="70" y1="1280" x2="1010" y2="1280" stroke="${t.land}" stroke-width="2"/>
+  <text x="540" y="1322" text-anchor="middle" font-size="24" font-weight="700" fill="${t.tx}">${esc(BRAND)}<tspan font-weight="400" fill="${t.sub}">  ·  ${esc(location.host)}</tspan></text>
+</svg>`;
+}
+function renderCard(){ $('card').innerHTML = cardSVG(S.tab, false, true); PostsUI.decorate(); bindZoom(); if(globeOn()) drawGlobe(); }
+
+/* ===== Zoom + pan on the flat maps (the downloaded picture is not affected) ===== */
+let ZB = null;
+function bindZoom(){
+  const svgEl = document.querySelector('#card svg'), mz = document.getElementById('mapZ'); if(!svgEl || !mz) return;
+  const tab = S.tab, svg = d3.select(svgEl);
+  ZB = d3.zoom().scaleExtent([1, 8]).extent([[0,215],[1080,1124]]).translateExtent([[0,215],[1080,1124]])
+    .filter(e => e.type === 'wheel' ? true : (!e.ctrlKey && !e.button))
+    .on('zoom', e => {
+      const t = e.transform; ZT[tab] = t.k === 1 && !t.x && !t.y ? null : {k:t.k, x:t.x, y:t.y};
+      mz.setAttribute('transform', zAttr(tab));
+      svgEl.style.touchAction = t.k > 1 ? 'none' : 'pan-y';   // one finger still scrolls the page until you zoom in
+      const r = $('zReset'); if(r) r.disabled = t.k === 1;
+    });
+  svg.call(ZB).on('dblclick.zoom', null);
+  const z = ZT[tab]; svgEl.__zoom = z ? d3.zoomIdentity.translate(z.x, z.y).scale(z.k) : d3.zoomIdentity;
+  svgEl.style.touchAction = z ? 'none' : 'pan-y';
+  const r = $('zReset'); if(r) r.disabled = !z;
+}
+function zoomBtn(f){
+  const s = d3.select('#card svg'); if(s.empty() || !ZB) return;
+  if(f === 0) s.transition().duration(220).call(ZB.transform, d3.zoomIdentity); else s.transition().duration(220).call(ZB.scaleBy, f);
+}
+
+/* ===== Picker ===== */
+function groups(){
+  if(S.tab==='my') return L.MYG.map(g=>({key:g.name, name:nm(g.name), items:g.s}));
+  return S.tab==='bd' ? L.DIV.map(d=>({key:d.name, name:divName(d.name), items:d.d})) : L.CONT.map(c=>({key:c.name, name:nm(c.name), items:c.c}));
+}
+function renderPicker(){
+  const bd = S.tab==='bd', my = S.tab==='my', rv = S.tab==='review', set = rv ? PostsUI.reviewed() : (S[S.tab] || S.world), q = $('q').value.trim().toLowerCase();
+  $('pickTitle').textContent = tr(rv ? 'revTitle' : my ? 'statesTitle' : bd ? 'distTitle' : S.tab==='plan' ? 'planTitle' : 'ctyTitle');
+  $('pickCount').textContent = rv ? dig(set.size) + (lang==='bn' ? '' : ' ') + tr('revCnt') : dig(set.size) + ' / ' + dig(TOTAL[S.tab]);
+  document.querySelector('.links').classList.toggle('hide', rv);
+  $('q').placeholder = tr(my ? 'searchS' : bd ? 'searchD' : 'searchC');
+  setTip();
+  $('namesLbl').textContent = tr(my ? 'stateNames' : bd ? 'distNames' : 'ctyNames');
+  $('namesChk').checked = S.names[S.tab] !== false;
+  $('groups').innerHTML = groups().map(g => {
+    const n = g.items.filter(x=>set.has(x)).length;
+    const shown = g.items.filter(x=>!q || x.toLowerCase().includes(q) || (BN[x]||'').includes(q));
+    if(!shown.length) return '';
+    return `<div class="grp"><div class="row"><span><b>${esc(g.name)}</b><small>${dig(n)}/${dig(g.items.length)}</small></span>
+      ${rv ? '' : `<button class="lnk" data-g="${esc(g.key)}">${tr(n===g.items.length?'clear':'selAll')}</button>`}</div>
+      <div class="chips">${shown.map(x=>`<button class="chip${set.has(x)?' on':''}${S.tab==='plan'?' plan':''}${S.tab==='plan'&&S.world.has(x)?' dis':''}" data-k="${esc(x)}"${S.tab==='plan'&&S.world.has(x)?' disabled':''}>${esc(nm(x))}${rv && set.has(x) ? `<small>★${dig((PostsUI.avg(x)||0).toFixed(1))}</small>` : ''}</button>`).join('')}</div></div>`;
+  }).join('');
+}
+function addK(k){ const s=S[S.tab]; if(S.tab==='plan' && S.world.has(k)) return; s.add(k); if(S.tab==='world') S.plan.delete(k); }
+function toggle(k){ const s=S[S.tab]; if(!s) return; if(s.has(k)) s.delete(k); else addK(k); changed(); }
+
+/* ===== Save / load ===== */
+let saveT;
+function payload(){ return {name:S.name, theme:S.theme, photo:S.photo, bd:[...S.bd], my:[...S.my], world:[...S.world], plan:[...S.plan], names:S.names}; }
+function load(m){
+  S.name=m.name||''; S.theme=m.theme ?? 1; S.photo=m.photo||'';
+  S.bd=new Set(m.bd||[]); S.my=new Set(m.my||[]); S.world=new Set(m.world||[]); S.names=Object.assign({bd:true,my:true,world:true,plan:true}, m.names||{});
+  S.plan=new Set((m.plan||[]).filter(k=>!S.world.has(k)));
+}
+let stKey=''; function setStatus(k){ stKey=k; $('status').textContent = k?tr(k):''; }
+function changed(){
+  renderCard(); renderPicker();
+  if(mode!=='owner') return;
+  setStatus('saving'); clearTimeout(saveT); saveT = setTimeout(save, 700);
+}
+async function save(){
+  if(isDemo()){ try{ localStorage.setItem('tm_local', JSON.stringify(payload())); setStatus('saved'); }catch(_){ setStatus('saveFail'); } return; }
+  try{
+    if(user){
+      const r = await rpc('save_my_map', {p:payload()});
+      if(!me || me.id!==r.id){ me = {id:r.id, account:true}; renderLink(); }
+    } else {
+      let ok = false;
+      if(me && me.token) ok = await rpc('update_map', {p_id:me.id, p_token:me.token, p:payload()});
+      if(!ok){
+        me = await rpc('create_map', {p:payload()});
+        localStorage.setItem('tm_me', JSON.stringify(me)); renderLink();
+      }
+    }
+    setStatus('saved');
+  }catch(_){ setStatus('saveFail'); }
+}
+function renderLink(){
+  const b = $('linkBody');
+  if(!me){ b.innerHTML = `<p class="tip" style="margin:8px 0 0;text-align:left">${tr('pickToStart')}</p>`; return; }
+  const url = uLink(me.id);
+  const acct = !!me.account;
+  b.innerHTML = `<div class="linkbox">${esc(url)}</div>
+    <div class="btns"><button class="btn" id="cpLink">${tr('copyLink')}</button>${acct ? '' : `<button class="btn alt" id="cpEdit">${tr('copyEdit')}</button>`}</div>
+    <p class="tip" style="text-align:left">${tr(acct ? 'accountNote' : 'linkNote')}</p>`;
+  $('cpLink').onclick = () => copy(url, $('cpLink'));
+  if(!acct) $('cpEdit').onclick = () => copy(eLink(me.id, me.token), $('cpEdit'));
+}
+async function copy(t, btn){
+  const o = btn.textContent;
+  try{ await navigator.clipboard.writeText(t); btn.textContent=tr('copied'); }catch(_){ prompt('Copy this:', t); }
+  setTimeout(()=>btn.textContent=o, 1500);
+}
+
+/* ===== Export ===== */
+async function toCanvas(kind){
+  const svg = cardSVG(kind, true);
+  const url = URL.createObjectURL(new Blob([svg],{type:'image/svg+xml;charset=utf-8'}));
+  const img = new Image();
+  await new Promise((ok,no)=>{img.onload=ok; img.onerror=no; img.src=url;});
+  const c = document.createElement('canvas'); c.width=1620; c.height=2025;
+  const x = c.getContext('2d'); x.fillStyle=THEMES[S.theme].bg; x.fillRect(0,0,c.width,c.height);
+  x.drawImage(img,0,0,c.width,c.height); URL.revokeObjectURL(url);
+  return c;
+}
+function save_(blob, name){ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000); }
+async function download(f){
+  try{
+    const c = await toCanvas(S.tab), base = 'my-'+(S.tab==='bd'?'bangladesh':S.tab==='my'?'malaysia':S.tab==='plan'?'trip-plan':'world')+'-map';
+    if(f==='pdf'){
+      const {jsPDF} = window.jspdf; const d = new jsPDF({unit:'px',format:[1080,1350],orientation:'portrait'});
+      d.addImage(c.toDataURL('image/jpeg',.92),'JPEG',0,0,1080,1350); d.save(base+'.pdf');
+    } else {
+      const type = f==='png'?'image/png':'image/jpeg';
+      c.toBlob(b=>save_(b, base+'.'+f), type, .92);
+    }
+  }catch(e){ alert(tr('dlFail')); }
+}
+
+/* ===== UI wiring ===== */
+/* ===== Globe ===== */
+S.view = 'flat'; try{ S.view = localStorage.getItem('tm_view') === 'globe' ? 'globe' : 'flat'; }catch(_){}
+const GL = {rot:[-88,-22], k:1, auto:!matchMedia('(prefers-reduced-motion: reduce)').matches, raf:0, ptrs:new Map(), size:0, dpr:1, ctx:null, proj:null, pinch:0, k0:1, moved:0, down:null, bound:false};
+const clampN = (v,a,b) => Math.max(a, Math.min(b, v));
+function globeOn(){ return S.view==='globe' && (S.tab==='world' || S.tab==='plan' || S.tab==='review'); }
+function setTip(){
+  const el = $('tip'); if(!el) return;
+  if(PostsUI.active()){ el.textContent = PostsUI.tipText(); return; }
+  if(globeOn()) el.textContent = tr(mode==='owner' ? 'globeTipOwner' : 'globeTipView');
+  else el.textContent = mode==='owner' ? tr(S.tab==='my' ? 'tipS' : S.tab==='bd' ? 'tipD' : 'tipC') : '';
+}
+function applyView(){
+  const can = S.tab==='world' || S.tab==='plan' || S.tab==='review', g = can && S.view==='globe';
+  $('viewSwitch').classList.toggle('hide', !can);
+  document.querySelectorAll('#viewSwitch button').forEach(b => b.classList.toggle('on', b.dataset.v===S.view));
+  $('card').classList.toggle('hide', g); $('zoomCtl').classList.toggle('hide', g);
+  $('globeWrap').classList.toggle('hide', !g);
+  $('dlBlock').classList.toggle('hide', g || S.tab==='review');
+  $('legend').classList.toggle('hide', !(g && S.tab==='plan'));
+  setTip();
+  if(g){ sizeGlobe(); bindGlobe(); startGlobe(); } else stopGlobe();
+}
+function setView(v){ S.view = v; try{ localStorage.setItem('tm_view', v); }catch(_){} applyView(); }
+function sizeGlobe(){
+  const cv = $('globeCv'), w = Math.max(240, Math.min($('globeWrap').clientWidth || 360, 640));
+  GL.dpr = Math.min(window.devicePixelRatio || 1, 1.5); GL.size = w;
+  cv.width = Math.round(w*GL.dpr); cv.height = Math.round(w*GL.dpr);
+  cv.style.width = w + 'px'; cv.style.height = w + 'px';
+  GL.ctx = cv.getContext('2d');
+}
+const GRAT = d3.geoGraticule10(), GPROJ = d3.geoOrthographic().clipAngle(90);
+function drawGlobe(){
+  const g = G.globe, ctx = GL.ctx; if(!ctx || !GL.size) return;
+  const t = THEMES[S.theme], W = GL.size, R = W/2*0.9*GL.k, plan = S.tab==='plan';
+  $('globeWrap').style.background = t.bg;
+  $('lgA').style.setProperty('--lg', t.acc); $('lgB').style.setProperty('--lg', t.pl);
+  ctx.setTransform(GL.dpr,0,0,GL.dpr,0,0);
+  ctx.fillStyle = t.bg; ctx.fillRect(0,0,W,W);
+  const proj = GPROJ.translate([W/2,W/2]).scale(R).rotate(GL.rot);
+  const lite = GL.auto || GL.moving;   // light outlines while it moves, full detail when it rests
+  GL.proj = proj;
+  const path = d3.geoPath(proj, ctx);
+  ctx.beginPath(); path({type:'Sphere'}); ctx.fillStyle = t.land + '55'; ctx.fill();
+  ctx.beginPath(); path(GRAT); ctx.strokeStyle = t.land + '99'; ctx.lineWidth = .5; ctx.stroke();
+  if(!g) return;
+  const grp = {land:[], vis:[], pl:[]}, RVS = S.tab==='review' ? PostsUI.reviewed() : null, isV = k => RVS ? RVS.has(k) : S.world.has(k);
+  for(const c of g){ grp[c.k && isV(c.k) ? 'vis' : (plan && c.k && S.plan.has(c.k) ? 'pl' : 'land')].push(c); }
+  for(const [name, col] of [['land',t.land],['vis',t.acc],['pl',t.pl]]){
+    if(!grp[name].length) continue;
+    ctx.beginPath(); for(const c of grp[name]) path(lite && c.lo && c.lo.geometry ? c.lo : c.f);
+    ctx.fillStyle = col; ctx.fill(); ctx.strokeStyle = t.bg; ctx.lineWidth = .6; ctx.stroke();
+  }
+  ctx.beginPath(); path({type:'Sphere'}); ctx.strokeStyle = t.land; ctx.lineWidth = 2; ctx.stroke();
+  PostsUI.globeMarks(ctx, proj, [-GL.rot[0], -GL.rot[1]]);
+  if(S.names[S.tab] !== false && !lite){
+    const center = [-GL.rot[0], -GL.rot[1]];
+    ctx.font = '700 ' + Math.round(clampN(9 + GL.k*2, 10, 15)) + 'px system-ui, "Noto Sans Bengali", sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round'; ctx.lineWidth = 4;
+    const used = [];
+    for(const c of grp.vis.concat(grp.pl)){
+      if(!isFinite(c.c[0]) || d3.geoDistance(c.c, center) > 1.3) continue;
+      const p = proj(c.c); if(!p) continue;
+      const lw = ctx.measureText(nm(c.k)).width / 2 + 3, lh = 9;
+      if(used.some(u => Math.abs(u[0] - p[0]) < u[2] + lw && Math.abs(u[1] - p[1]) < u[3] + lh)) continue;
+      used.push([p[0], p[1], lw, lh]);
+      ctx.strokeStyle = t.bg; ctx.strokeText(nm(c.k), p[0], p[1]);
+      ctx.fillStyle = t.tx; ctx.fillText(nm(c.k), p[0], p[1]);
+    }
+  }
+}
+function globeLoop(now){
+  GL.raf = 0;
+  if(!GL.auto || !globeOn() || document.hidden || GL.offscreen) return;
+  if(!GL.last) GL.last = now;
+  const dt = now - GL.last;
+  if(dt < 33){ GL.raf = requestAnimationFrame(globeLoop); return; }   // about 30 frames a second is plenty
+  GL.last = now;
+  GL.rot = [GL.rot[0] + Math.min(dt, 100) * 0.009, GL.rot[1]];       // 9 degrees a second, whatever the frame rate
+  drawGlobe(); GL.raf = requestAnimationFrame(globeLoop);
+}
+function startGlobe(){ GL.last = 0; drawGlobe(); if(GL.auto && !GL.raf) GL.raf = requestAnimationFrame(globeLoop); }
+function stopGlobe(){ if(GL.raf) cancelAnimationFrame(GL.raf); GL.raf = 0; }
+function moveGlobe(){ GL.moving = true; clearTimeout(GL.settle); GL.settle = setTimeout(() => { GL.moving = false; drawGlobe(); }, 200); }
+function pickOnGlobe(e){
+  if(!GL.proj || !G.globe) return;
+  const r = $('globeCv').getBoundingClientRect();
+  const ll = GL.proj.invert([e.clientX - r.left, e.clientY - r.top]);
+  if(!ll || !isFinite(ll[0]) || !isFinite(ll[1])) return;
+  const hit = G.globe.find(c => c.k && d3.geoContains(c.f, ll));
+  if(!hit) return;
+  if(PostsUI.tap(hit.k)) return;
+  if(mode==='owner') toggle(hit.k);
+}
+function bindGlobe(){
+  if(GL.bound) return; GL.bound = true;
+  const cv = $('globeCv');
+  const dist = () => { const [a,b] = [...GL.ptrs.values()]; return Math.hypot(a.x-b.x, a.y-b.y) || 1; };
+  cv.addEventListener('pointerdown', e => {
+    cv.setPointerCapture(e.pointerId); GL.ptrs.set(e.pointerId, {x:e.clientX, y:e.clientY});
+    GL.auto = false; stopGlobe(); moveGlobe();
+    if(GL.ptrs.size===1){ GL.moved = 0; GL.down = {t:Date.now()}; }
+    if(GL.ptrs.size===2){ GL.pinch = dist(); GL.k0 = GL.k; GL.moved += 99; }
+  });
+  cv.addEventListener('pointermove', e => {
+    const p = GL.ptrs.get(e.pointerId); if(!p) return;
+    if(GL.ptrs.size===1){
+      const dx = e.clientX - p.x, dy = e.clientY - p.y, f = (180/Math.PI) / (GL.size/2*0.9*GL.k);
+      GL.rot = [GL.rot[0] + dx*f, clampN(GL.rot[1] - dy*f, -90, 90)]; GL.moved += Math.abs(dx) + Math.abs(dy);
+    }
+    p.x = e.clientX; p.y = e.clientY;
+    if(GL.ptrs.size===2 && GL.pinch) GL.k = clampN(GL.k0 * dist() / GL.pinch, 0.8, 5);
+    moveGlobe(); drawGlobe();
+  });
+  const up = e => {
+    const had = GL.ptrs.delete(e.pointerId);
+    if(GL.ptrs.size < 2) GL.pinch = 0;
+    if(had && GL.ptrs.size===0 && e.type==='pointerup' && GL.moved < 6 && GL.down && Date.now() - GL.down.t < 500) pickOnGlobe(e);
+  };
+  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+  cv.addEventListener('wheel', e => { e.preventDefault(); GL.k = clampN(GL.k * Math.exp(-e.deltaY*0.0015), 0.8, 5); moveGlobe(); drawGlobe(); }, {passive:false});
+  addEventListener('resize', () => { if(globeOn()){ sizeGlobe(); drawGlobe(); } });
+  document.addEventListener('visibilitychange', () => { if(globeOn() && !document.hidden) startGlobe(); });
+  if('IntersectionObserver' in window) new IntersectionObserver(es => { GL.offscreen = !es[0].isIntersecting; if(!GL.offscreen && globeOn()) startGlobe(); }).observe($('globeWrap'));
+}
+function showTab(t){
+  S.tab=t;
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on', b.dataset.t===t));
+  const own = mode==='owner', rv = t==='review';
+  $('pickPanel').classList.toggle('hide', !(own || rv));          // the Reviews tab has a country list for everyone
+  $('designPanel').classList.toggle('hide', !own || rv);
+  $('linkPanel').classList.toggle('hide', !own || rv);
+  if($('banner')) $('banner').classList.toggle('hide', own);
+  $('q').value=''; applyView(); PostsUI.sync(); renderPicker(); renderCard(); if($('geoErr')) showGeoErr();
+}
+function wire(){
+  $('tabs').onclick = e => { const b=e.target.closest('button'); if(b) showTab(b.dataset.t); };
+  $('q').oninput = renderPicker;
+  $('selAll').onclick = () => { groups().forEach(g=>g.items.forEach(addK)); changed(); };
+  $('clrAll').onclick = () => { S[S.tab].clear(); changed(); };
+  $('groups').onclick = e => {
+    const c = e.target.closest('.chip'); if(c) return S.tab==='review' ? PostsUI.openReview(c.dataset.k) : toggle(c.dataset.k);
+    const g = e.target.closest('[data-g]'); if(!g) return;
+    const grp = groups().find(x=>x.key===g.dataset.g), s=S[S.tab];
+    const all = grp.items.every(x=>s.has(x)||(S.tab==='plan'&&S.world.has(x)));
+    grp.items.forEach(x=> all ? s.delete(x) : addK(x)); changed();
+  };
+  $('card').onclick = e => { const p=e.target.closest('[data-k]'); if(!p) return; const k=p.getAttribute('data-k'); if(PostsUI.tap(k)) return; if(mode==='owner') toggle(k); };
+  $('themes').innerHTML += THEMES.map((t,i)=>`<button class="dot" data-th="${i}" style="--c1:${t.c1};--c2:${t.c2}" aria-label="Theme ${i+1}"></button>`).join('');
+  $('themes').onclick = e => { const b=e.target.closest('.dot'); if(!b) return; S.theme=+b.dataset.th; markTheme(); changed(); };
+  $('nameIn').oninput = e => { S.name=e.target.value; changed(); };
+  $('namesChk').onchange = e => { S.names[S.tab]=e.target.checked; changed(); };
+  $('photoBtn').onclick = () => S.photo ? (S.photo='', syncPhoto(), changed()) : $('photoIn').click();
+  $('photoIn').onchange = e => {
+    const f = e.target.files[0]; if(!f) return;
+    const img = new Image(), r = new FileReader();
+    r.onload = () => { img.onload = () => {
+      const c=document.createElement('canvas'); c.width=c.height=256; const x=c.getContext('2d');
+      const m=Math.min(img.width,img.height); x.drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,256,256);
+      S.photo=c.toDataURL('image/jpeg',.8); syncPhoto(); changed();
+    }; img.src=r.result; };
+    r.readAsDataURL(f); e.target.value='';
+  };
+  document.querySelector('.dl').onclick = e => { const b=e.target.closest('button'); if(b) openSheet(b.dataset.f); };
+  $('sheetThemes').innerHTML = THEMES.map((t,i)=>`<button class="dot" data-th="${i}" style="--c1:${t.c1};--c2:${t.c2}" aria-label="Theme ${i+1}"></button>`).join('');
+  $('sheetThemes').onclick = e => { const b=e.target.closest('.dot'); if(!b) return; S.theme=+b.dataset.th; markTheme(); changed(); $('sheetPrev').innerHTML = cardSVG(S.tab,false); };
+  $('sheetX').onclick = closeSheet;
+  $('sheet').onclick = e => { if(e.target.id==='sheet') closeSheet(); };
+  $('sheetGo').onclick = async () => { const f=sheetFmt; await download(f); closeSheet(); };
+  $('zIn').onclick = () => zoomBtn(1.6); $('zOut').onclick = () => zoomBtn(1/1.6); $('zReset').onclick = () => zoomBtn(0);
+  $('viewSwitch').onclick = e => { const b = e.target.closest('button'); if(b) setView(b.dataset.v); };
+  $('authBtn').onclick = () => {
+    if(!user) sb.auth.signInWithOAuth({provider:'google', options:{redirectTo: location.origin + '/app.html'}});
+    else $('userMenu').classList.toggle('hide');
+  };
+  $('shNative').onclick = shareNative;
+  $('shFb').onclick = () => window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(shareUrl()), '_blank');
+  $('shWa').onclick = () => window.open('https://wa.me/?text=' + encodeURIComponent(tr('shareText') + ' ' + shareUrl()), '_blank');
+  $('langBtn').onclick = () => { lang = lang==='en' ? 'bn' : 'en'; localStorage.setItem('tm_lang', lang); applyLang(); };
+  $('modeBtn').onclick = () => setMode(document.documentElement.dataset.mode==='dark' ? 'light' : 'dark');
+}
+let sheetFmt='png';
+function openSheet(f){ sheetFmt=f; $('sheet').classList.remove('hide'); $('sheetGo').textContent = (lang==='bn'?'ডাউনলোড ':'Download ')+f.toUpperCase(); $('sheetPrev').innerHTML = cardSVG(S.tab,false); markTheme(); }
+function closeSheet(){ $('sheet').classList.add('hide'); }
+function setMode(m){
+  document.documentElement.dataset.mode = m; localStorage.setItem('tm_mode', m);
+  $('modeI').textContent = m==='dark' ? '🌙' : '☀'; $('modeBtn').setAttribute('aria-checked', m==='dark');
+}
+function applyLang(){
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-i]').forEach(el => el.textContent = tr(el.dataset.i));
+  $('langBtn').textContent = lang==='en' ? 'বাংলা' : 'English';
+  $('appTitle').textContent = tr(notFoundFlag ? 'notFound' : 'appTitle');
+  document.title = tr('appTitle');
+  $('nameIn').placeholder = tr('yourName');
+  syncPhoto(); setStatus(stKey); renderAuth(); renderLink(); renderPicker(); renderCard(); renderBanner();
+  if(!$('sheet').classList.contains('hide')) openSheet(sheetFmt);
+  showGeoErr();
+}
+let notFoundFlag=false, geoErrMsg='', geoErrMy='';
+function renderBanner(){
+  if(mode!=='viewer') return;
+  $('banner').innerHTML = `<h2>${esc(S.name ? (lang==='bn' ? S.name+'-এর ভ্রমণ মানচিত্র' : S.name+"'s travel map") : tr('aMap'))}</h2><p class="tip" style="text-align:left;margin:6px 0 0">${tr('bannerSub')}</p>`;
+  $('cta').innerHTML = `<h2>${tr('makeOwn')}</h2><p class="tip">${tr('free')}</p><a href="/app.html" class="btn" style="display:inline-block;text-decoration:none">${tr('start')}</a>`;
+}
+function showGeoErr(){
+  const m = [geoErrMsg, S.tab==='my' ? geoErrMy : ''].filter(Boolean).join(' · ');
+  $('geoErr').classList.toggle('hide', !m); if(m) $('geoErr').textContent = m + ' · ' + tr('geoTail');
+}
+function markTheme(){ document.querySelectorAll('.dot').forEach(d=>d.classList.toggle('on', +d.dataset.th===S.theme)); }
+function syncPhoto(){
+  $('photoI').innerHTML = S.photo ? `<img src="${S.photo}" alt="">` : '👤';
+  $('photoTxt').textContent = tr(S.photo ? 'rmPhoto' : 'addPhoto');
+}
+
+function renderAuth(){
+  const b = $('authBtn');
+  if(!user){ b.textContent = tr('signIn'); $('userMenu').classList.add('hide'); return; }
+  const md = user.user_metadata || {}, av = md.avatar_url || md.picture;
+  b.innerHTML = av ? `<img src="${esc(av)}" alt="" referrerpolicy="no-referrer">` : esc((md.name || user.email || '?')[0].toUpperCase());
+  $('userMenu').innerHTML = `<div style="margin-bottom:10px;font-size:14px;color:var(--mut)">${esc(user.email || '')}</div><button class="btn alt" id="outBtn">${tr('signOut')}</button>`;
+  $('outBtn').onclick = async () => { await sb.auth.signOut(); location.href = '/app.html'; };
+}
+function shareUrl(){ return mode==='viewer' ? location.href : (me ? uLink(me.id) : location.origin + '/'); }
+async function shareNative(){
+  const url = shareUrl(), text = tr('shareText');
+  try{
+    const c = await toCanvas(S.tab);
+    const blob = await new Promise(r => c.toBlob(r, 'image/png'));
+    const file = new File([blob], 'my-map.png', {type:'image/png'});
+    if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], text: text + ' ' + url}); return; }
+  }catch(e){ if(e && e.name==='AbortError') return; }
+  if(navigator.share) navigator.share({title:BRAND, text, url}).catch(()=>{});
+  else copy(url, $('shNative'));
+}
+async function init(){
+  setMode(localStorage.getItem('tm_mode') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+  wire();
+  const path = location.pathname;
+  const qs = new URLSearchParams(location.search);
+  let m = path.match(/^\/e\/([\w-]+)/) || (qs.get('e') ? [0, qs.get('e')] : null);
+  if(m && location.hash.length>1){
+    localStorage.setItem('tm_me', JSON.stringify({id:m[1], token:location.hash.slice(1)}));
+    location.replace('/app.html'); return;
+  }
+  try{
+    const { data:{ session } } = await sb.auth.getSession();
+    user = session ? session.user : null;
+  }catch(_){}
+  if(user){
+    try{
+      const mine = await rpc('get_my_map');
+      if(mine){ load(mine); me = {id:mine.id, account:true}; localStorage.removeItem('tm_me'); }
+      else if(me && me.token){
+        const ok = await rpc('claim_map', {p_id:me.id, p_token:me.token});
+        if(ok){ me = {id:me.id, account:true}; localStorage.removeItem('tm_me'); } else me = null;
+      } else me = null;
+    }catch(_){}
+  }
+  m = path.match(/^\/u\/([\w-]+)/) || (qs.get('u') ? [0, qs.get('u')] : null);
+  if(m){ viewId=m[1]; mode = (me && me.id===viewId) ? 'owner' : 'viewer'; }
+  else if(me){ viewId = me.id; }
+
+  if(isDemo()){ try{ const l = JSON.parse(localStorage.getItem('tm_local')); if(l) load(l); }catch(_){} }
+  if(viewId){
+    try{
+      const m = await rpc('get_map', {p_id:viewId});
+      if(m) load(m);
+      else if(mode==='viewer'){ notFoundFlag=true; applyLang(); $('card').innerHTML=''; return; }
+      else { me=null; localStorage.removeItem('tm_me'); }
+    }catch(_){}
+  }
+  if(mode==='viewer'){
+    $('banner').classList.remove('hide'); $('cta').classList.remove('hide');
+  } else {
+    ['linkPanel','pickPanel','designPanel'].forEach(i=>$(i).classList.remove('hide'));
+    $('nameIn').value = S.name;
+  }
+  if(mode==='viewer'){ S.view = 'globe'; showTab('world'); } else showTab('bd');   // visitors land on the 3D world globe
+  applyLang(); PostsUI.refresh();
+  const errs=[];
+  await Promise.all([
+    prepBD().catch(e=>errs.push('Bangladesh map: '+e.message)),
+    prepMY().catch(e=>{ geoErrMy = 'Malaysia map: '+e.message; }),
+    prepWorld().catch(e=>errs.push('World map: '+e.message))
+  ]);
+  if(errs.length) geoErrMsg = errs.join(' · ');
+  showGeoErr();
+  renderCard();
+}
+init();
+</script>
+</body>
+</html>

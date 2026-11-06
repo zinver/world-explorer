@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>My Travel Map</title>
+<meta name="description" content="Colour in the districts of Bangladesh and the countries of the world you have visited, plan where to go next, and download a picture of your travels.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<style>
+:root{
+  --bg:#f4f6fb; --ink:#14172e; --mut:#565c80; --line:#d9deee;
+  --visited:#5b6cff; --plan:#e8a317; --ocean:#dfe5f7; --land:#c4cbe6; --btn:#14172e; --btnink:#f4f6fb;
+  --font:'Bricolage Grotesque','Hind Siliguri',system-ui,sans-serif;
+  --body:'Hind Siliguri','Bricolage Grotesque',system-ui,sans-serif;
+}
+[data-mode=dark]{
+  --bg:#0f1020; --ink:#eef0ff; --mut:#a3a8d0; --line:#262a4d;
+  --visited:#8794ff; --plan:#f0b43c; --ocean:#191b3a; --land:#2d3068; --btn:#eef0ff; --btnink:#0f1020;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 var(--body);transition:background .3s,color .3s}
+a{color:inherit}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+button{font-family:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--visited);outline-offset:3px;border-radius:8px}
+
+/* header */
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 0}
+.brand{font:700 20px var(--font);letter-spacing:-.01em;text-decoration:none}
+.ctl{display:flex;align-items:center;gap:10px}
+.pillb{border:1px solid var(--line);background:none;border-radius:999px;padding:8px 14px;font-weight:600;font-size:14px;cursor:pointer}
+.sw{width:58px;height:32px;border-radius:999px;border:2px solid var(--ink);background:none;position:relative;padding:0;cursor:pointer}
+.sw i{position:absolute;top:2px;left:2px;width:24px;height:24px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-style:normal;font-size:13px;transition:transform .25s cubic-bezier(.5,1.6,.5,1)}
+[data-mode=dark] .sw i{transform:translateX(26px)}
+.btn{display:inline-block;background:var(--btn);color:var(--btnink);text-decoration:none;border:0;border-radius:999px;padding:15px 28px;font:700 17px var(--body);cursor:pointer;transition:transform .2s}
+.btn:hover{transform:translateY(-2px)}
+.btn.line{background:none;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink)}
+.btn.sm{padding:9px 18px;font-size:15px}
+
+/* hero */
+.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:32px;align-items:center;padding:40px 0 72px}
+h1{font:800 clamp(42px,6.4vw,82px)/1.0 var(--font);letter-spacing:-.035em;margin:0 0 22px}
+[lang=bn] h1{line-height:1.2;letter-spacing:0}
+.lead{font-size:clamp(18px,2vw,21px);color:var(--mut);max-width:34em;margin:0 0 30px}
+.acts{display:flex;gap:14px;flex-wrap:wrap}
+.stage{position:relative}
+#hero{display:block;width:100%;height:auto;aspect-ratio:1}
+.cap{display:flex;justify-content:center;gap:22px;flex-wrap:wrap;font-size:14px;color:var(--mut);margin-top:6px}
+.cap span{display:flex;align-items:center;gap:8px}
+.cap i{width:12px;height:12px;border-radius:50%;display:inline-block}
+
+/* sections */
+section{padding:72px 0;border-top:1px solid var(--line)}
+h2{font:800 clamp(30px,4vw,46px)/1.1 var(--font);letter-spacing:-.025em;margin:0 0 36px;max-width:16em}
+[lang=bn] h2{line-height:1.3;letter-spacing:0}
+.feats{display:grid;grid-template-columns:1fr 1fr;column-gap:56px}
+.feat{padding:22px 0;border-top:1px solid var(--line)}
+.feat h3{font:700 22px var(--font);margin:0 0 6px;letter-spacing:-.01em}
+.feat p{margin:0;color:var(--mut);max-width:30em}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;counter-reset:s}
+.step{position:relative;padding-top:20px;border-top:3px solid var(--visited)}
+.step:nth-child(2){border-top-color:var(--plan)}
+.step:nth-child(3){border-top-color:var(--ink)}
+.step b{display:block;font:800 46px/1 var(--font);margin-bottom:10px;color:var(--mut)}
+.step h3{font:700 22px var(--font);margin:0 0 6px}
+.step p{margin:0;color:var(--mut)}
+.link p{max-width:36em;color:var(--mut);font-size:19px;margin:0}
+.link code{display:inline-block;background:var(--ocean);border-radius:10px;padding:2px 12px;color:var(--ink);font-size:16px;margin-top:20px}
+.cta{text-align:left}
+.cta h2{margin-bottom:26px}
+footer{padding:34px 0 48px;border-top:1px solid var(--line);color:var(--mut);font-size:15px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+/* slow reveal */
+.rv{opacity:0;transform:translateY(26px);transition:opacity 1s ease var(--d,0s),transform 1s cubic-bezier(.2,.7,.2,1) var(--d,0s)}
+.rv.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.rv{opacity:1;transform:none;transition:none}html{scroll-behavior:auto}.btn{transition:none}}
+noscript style{display:none}
+
+@media (max-width:520px){ header .btn.sm{display:none} .brand{font-size:18px} }
+@media (max-width:860px){
+  .hero{grid-template-columns:1fr;padding:20px 0 48px}
+  .stage{max-width:460px;margin:0 auto;width:100%}
+  .feats{grid-template-columns:1fr}
+  .steps{grid-template-columns:1fr;gap:28px}
+  section{padding:52px 0}
+}
+</style>
+<noscript><style>.rv{opacity:1;transform:none}</style></noscript>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="brand" href="/" data-t="brand"></a>
+    <div class="ctl">
+      <button class="pillb" id="lang"></button>
+      <button class="sw" id="mode" role="switch" aria-label="Dark mode"><i id="modeI">☀</i></button>
+      <a class="btn sm" href="app.html" data-t="start"></a>
+    </div>
+  </header>
+
+  <div class="hero">
+    <div>
+      <h1 class="rv" data-t="h1"></h1>
+      <p class="lead rv" style="--d:.15s" data-t="lead"></p>
+      <div class="acts rv" style="--d:.3s">
+        <a class="btn" href="app.html" data-t="start"></a>
+        <a class="btn line" href="#how" data-t="see"></a>
+      </div>
+    </div>
+    <div class="stage rv" style="--d:.2s">
+      <canvas id="hero" aria-label="A rotating globe with countries being coloured in"></canvas>
+      <div class="cap"><span data-t="example"></span><span><i style="background:var(--visited)"></i><b data-t="legV" style="font-weight:500"></b></span><span><i style="background:var(--plan)"></i><b data-t="legP" style="font-weight:500"></b></span></div>
+    </div>
+  </div>
+
+  <section id="what">
+    <h2 class="rv" data-t="whatT"></h2>
+    <div class="feats">
+      <div class="feat rv"><h3 data-t="f1t"></h3><p data-t="f1"></p></div>
+      <div class="feat rv" style="--d:.1s"><h3 data-t="f2t"></h3><p data-t="f2"></p></div>
+      <div class="feat rv"><h3 data-t="f3t"></h3><p data-t="f3"></p></div>
+      <div class="feat rv" style="--d:.1s"><h3 data-t="f4t"></h3><p data-t="f4"></p></div>
+      <div class="feat rv"><h3 data-t="f5t"></h3><p data-t="f5"></p></div>
+      <div class="feat rv" style="--d:.1s"><h3 data-t="f6t"></h3><p data-t="f6"></p></div>
+    </div>
+  </section>
+
+  <section id="how">
+    <h2 class="rv" data-t="howT"></h2>
+    <div class="steps">
+      <div class="step rv"><b>1</b><h3 data-t="s1t"></h3><p data-t="s1"></p></div>
+      <div class="step rv" style="--d:.15s"><b>2</b><h3 data-t="s2t"></h3><p data-t="s2"></p></div>
+      <div class="step rv" style="--d:.3s"><b>3</b><h3 data-t="s3t"></h3><p data-t="s3"></p></div>
+    </div>
+  </section>
+
+  <section class="link">
+    <h2 class="rv" data-t="linkT"></h2>
+    <p class="rv" style="--d:.1s" data-t="linkP"></p>
+    <code class="rv" id="ex" style="--d:.2s">yoursite.com/u/k3m9x2ab</code>
+  </section>
+
+  <section class="cta">
+    <h2 class="rv" data-t="ctaT"></h2>
+    <a class="btn rv" style="--d:.1s" href="app.html" data-t="start"></a>
+  </section>
+
+  <footer><span data-t="brand"></span><span data-t="foot"></span></footer>
+</div>
+
+<script>
+const T = {
+ en:{
+  title:'My Travel Map', brand:'My Travel Map', start:'Start my map', see:'See how it works',
+  h1:"Colour in the places you've been.",
+  lead:'Pick the districts of Bangladesh and the countries of the world you have visited. Get a picture of your travels that you can download and share.',
+  example:'Example map', legV:'Visited', legP:'Want to visit',
+  whatT:'What you can do',
+  f1t:'Bangladesh map', f1:'All 64 districts, grouped into the 8 divisions. Tap a district on the map or choose it from a list.',
+  f2t:'World map', f2:'194 countries. See it flat, or spin it as a 3D globe with your mouse or finger.',
+  f3t:'Trip plan', f3:'Mark the countries you want to visit next. They appear in a second colour beside the places you have already been.',
+  f4t:'World quiz', f4:'20 multiple-choice questions about the world, in a new random order every time.',
+  f5t:'Your picture', f5:'Choose a colour theme, add your name and photo, then download it as PNG, JPG or PDF.',
+  f6t:'English and Bangla', f6:'The whole website, the place names and your downloaded picture work in both languages.',
+  howT:'How it works',
+  s1t:'Pick your places', s1:'Search the list or tap the map. Choose the places you have been to and the ones you want to visit.',
+  s2t:'Make it yours', s2:'Pick a colour theme, then add your name and photo if you like.',
+  s3t:'Download or share', s3:'Save the picture, or send your personal link to friends and family.',
+  linkT:'Your own link, no login',
+  linkP:'Every map gets its own link. Send it to anyone and they can see where you have been and where you want to go. If you sign in with Google, your map is saved to your account and stays with you on every device.',
+  ctaT:'Ready to colour in your map?', foot:'Bangladesh and world travel maps'
+ },
+ bn:{
+  title:'আমার ভ্রমণ মানচিত্র', brand:'আমার ভ্রমণ মানচিত্র', start:'আমার মানচিত্র শুরু করুন', see:'কীভাবে কাজ করে দেখুন',
+  h1:'যেসব জায়গা ঘুরেছেন, সেগুলো রঙ করুন।',
+  lead:'বাংলাদেশের যে জেলা আর বিশ্বের যে দেশগুলো ঘুরেছেন সেগুলো বেছে নিন। আপনার ভ্রমণের একটি ছবি পাবেন, যা ডাউনলোড ও শেয়ার করা যায়।',
+  example:'উদাহরণ মানচিত্র', legV:'ঘোরা হয়েছে', legP:'ঘুরতে চাই',
+  whatT:'যা যা করতে পারবেন',
+  f1t:'বাংলাদেশের মানচিত্র', f1:'৬৪টি জেলা, ৮টি বিভাগে সাজানো। মানচিত্রে জেলায় ট্যাপ করুন অথবা তালিকা থেকে বেছে নিন।',
+  f2t:'বিশ্বের মানচিত্র', f2:'১৯৪টি দেশ। সমতল মানচিত্রে দেখুন, অথবা মাউস বা আঙুলে ঘুরিয়ে ৩ডি গ্লোবে দেখুন।',
+  f3t:'ট্রিপ প্ল্যান', f3:'পরে যে দেশগুলোতে ঘুরতে চান সেগুলো চিহ্নিত করুন। যেসব জায়গা ঘুরেছেন তার পাশে এগুলো আলাদা রঙে দেখা যাবে।',
+  f4t:'বিশ্ব কুইজ', f4:'বিশ্ব নিয়ে ২০টি বহুনির্বাচনি প্রশ্ন, প্রতিবার নতুন এলোমেলো ক্রমে।',
+  f5t:'আপনার ছবি', f5:'রঙের থিম বেছে নিন, নাম ও ছবি যোগ করুন, তারপর PNG, JPG বা PDF হিসেবে ডাউনলোড করুন।',
+  f6t:'ইংরেজি ও বাংলা', f6:'পুরো ওয়েবসাইট, জায়গার নাম এবং ডাউনলোড করা ছবি—দুই ভাষাতেই কাজ করে।',
+  howT:'কীভাবে কাজ করে',
+  s1t:'জায়গাগুলো বেছে নিন', s1:'তালিকায় খুঁজুন বা মানচিত্রে ট্যাপ করুন। যেখানে গেছেন আর যেখানে যেতে চান, বেছে নিন।',
+  s2t:'নিজের মতো সাজান', s2:'একটি রঙের থিম বেছে নিন, চাইলে নাম ও ছবি যোগ করুন।',
+  s3t:'ডাউনলোড বা শেয়ার করুন', s3:'ছবিটি সেভ করুন, অথবা বন্ধু ও পরিবারকে আপনার নিজস্ব লিংক পাঠান।',
+  linkT:'নিজের লিংক, লগইন ছাড়াই',
+  linkP:'প্রতিটি মানচিত্র নিজস্ব লিংক পায়। যে কাউকে পাঠালে তারা দেখতে পাবে আপনি কোথায় গেছেন আর কোথায় যেতে চান। গুগল দিয়ে সাইন ইন করলে মানচিত্র আপনার অ্যাকাউন্টে সেভ থাকবে এবং সব ডিভাইসে পাবেন।',
+  ctaT:'আপনার মানচিত্র রঙ করতে প্রস্তুত?', foot:'বাংলাদেশ ও বিশ্বের ভ্রমণ মানচিত্র'
+ }
+};
+const $ = id => document.getElementById(id);
+const root = document.documentElement;
+let lang = 'en'; try{ lang = localStorage.getItem('tm_lang') === 'bn' ? 'bn' : 'en'; }catch(_){}
+function applyLang(){
+  root.lang = lang;
+  document.querySelectorAll('[data-t]').forEach(el => { el.textContent = T[lang][el.dataset.t]; });
+  $('lang').textContent = lang === 'en' ? 'বাংলা' : 'English';
+  document.title = T[lang].title;
+}
+function setMode(m){
+  root.dataset.mode = m; try{ localStorage.setItem('tm_mode', m); }catch(_){}
+  $('modeI').textContent = m === 'dark' ? '🌙' : '☀'; $('mode').setAttribute('aria-checked', m === 'dark');
+}
+let saved = null; try{ saved = localStorage.getItem('tm_mode'); }catch(_){}
+setMode(saved || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+$('lang').onclick = () => { lang = lang === 'en' ? 'bn' : 'en'; try{ localStorage.setItem('tm_lang', lang); }catch(_){} applyLang(); };
+$('mode').onclick = () => setMode(root.dataset.mode === 'dark' ? 'light' : 'dark');
+applyLang();
+if(location.host) $('ex').textContent = location.host + '/u/k3m9x2ab';
+
+/* slow reveal on scroll */
+(function(){
+  const els = document.querySelectorAll('.rv');
+  if(!('IntersectionObserver' in window)){ els.forEach(e => e.classList.add('in')); return; }
+  const io = new IntersectionObserver(es => es.forEach(e => { if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } }), {threshold:.15, rootMargin:'0px 0px -6% 0px'});
+  els.forEach(e => io.observe(e));
+  setTimeout(() => document.querySelectorAll('.hero .rv').forEach(e => e.classList.add('in')), 80);
+})();
+
+/* hero globe: rotates to a country, then colours it in */
+(async function(){
+  const cv = $('hero'); if(!cv || !window.d3 || !window.topojson) return;
+  let world;
+  try{ world = await (await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')).json(); }
+  catch(_){ cv.parentElement.style.display = 'none'; return; }
+  const feats = topojson.feature(world, world.objects.countries).features;
+  const byName = {}; feats.forEach(f => byName[f.properties.name] = f);
+  const big = f => {
+    const g = f.geometry;
+    if(g.type !== 'MultiPolygon') return d3.geoCentroid(f);
+    let best = null, ba = -1;
+    for(const c of g.coordinates){ const p = {type:'Polygon', coordinates:c}, a = d3.geoArea(p); if(a > ba){ ba = a; best = p; } }
+    return d3.geoCentroid(best);
+  };
+  const seq = [['Bangladesh','v'],['India','v'],['Thailand','v'],['Japan','p'],['Turkey','v'],['Egypt','p'],['France','v'],['Brazil','p'],['Canada','v'],['Australia','p'],['Kenya','p'],['Argentina','p']]
+    .filter(s => byName[s[0]]).map(s => ({f:byName[s[0]], kind:s[1], c:big(byName[s[0]]), at:0}));
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const css = n => getComputedStyle(root).getPropertyValue(n).trim();
+  const ctx = cv.getContext('2d');
+  let W = 0, dpr = 1;
+  const size = () => { W = Math.round(cv.getBoundingClientRect().width) || 480; dpr = Math.min(devicePixelRatio || 1, 2); cv.width = cv.height = Math.round(W*dpr); };
+  size(); addEventListener('resize', size);
+  let rot = [-80,-20], target = [-80,-20], idx = 0, phase = 'move', hold = 0, visible = true, still = false;
+  new MutationObserver(() => { still = false; }).observe(root, {attributes:true, attributeFilter:['data-mode']});
+  new IntersectionObserver(es => { visible = es[0].isIntersecting; }, {threshold:0}).observe(cv);
+  if(reduce){ seq.forEach(s => s.at = 1); rot = [-88,-22]; }
+  function frame(now){
+    requestAnimationFrame(frame);
+    if(!visible && !reduce) return;
+    if(reduce && still) return;
+    if(reduce) still = true;
+    if(!reduce){
+      if(phase === 'move'){
+        const s = seq[idx];
+        target = [-s.c[0], -s.c[1] * .7];
+        let d = target[0] - rot[0]; d = ((d + 540) % 360) - 180;
+        rot[0] += d * .045; rot[1] += (target[1] - rot[1]) * .045;
+        if(Math.abs(d) < 3){ s.at = now; phase = 'hold'; hold = now; }
+      } else if(now - hold > 900){
+        idx++; phase = 'move';
+        if(idx >= seq.length){ if(now - hold > 2600){ idx = 0; seq.forEach(s => s.at = 0); } else { idx = seq.length - 1; phase = 'hold'; } }
+      }
+    }
+    const land = css('--land'), ocean = css('--ocean'), vis = css('--visited'), pl = css('--plan'), bg = css('--bg');
+    ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,W,W);
+    const proj = d3.geoOrthographic().translate([W/2,W/2]).scale(W/2*.94).rotate(rot).clipAngle(90);
+    const path = d3.geoPath(proj, ctx);
+    ctx.beginPath(); path({type:'Sphere'}); ctx.fillStyle = ocean; ctx.fill();
+    ctx.beginPath(); path(d3.geoGraticule10()); ctx.strokeStyle = land; ctx.globalAlpha = .45; ctx.lineWidth = .5; ctx.stroke(); ctx.globalAlpha = 1;
+    ctx.beginPath(); for(const f of feats) path(f); ctx.fillStyle = land; ctx.fill(); ctx.strokeStyle = bg; ctx.lineWidth = .5; ctx.stroke();
+    for(const s of seq){
+      if(!s.at) continue;
+      const a = reduce ? 1 : Math.min(1, (now - s.at) / 700);
+      ctx.globalAlpha = a; ctx.beginPath(); path(s.f); ctx.fillStyle = s.kind === 'v' ? vis : pl; ctx.fill();
+      ctx.strokeStyle = bg; ctx.lineWidth = .6; ctx.stroke(); ctx.globalAlpha = 1;
+    }
+    ctx.beginPath(); path({type:'Sphere'}); ctx.strokeStyle = land; ctx.lineWidth = 2; ctx.stroke();
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+// World quiz: 20 questions. o = options, a = index of the correct option.
+window.QUIZ = [
+ {q:{en:'What is the capital of Australia?',bn:'অস্ট্রেলিয়ার রাজধানী কোনটি?'},o:[{en:'Sydney',bn:'সিডনি'},{en:'Canberra',bn:'ক্যানবেরা'},{en:'Melbourne',bn:'মেলবোর্ন'},{en:'Perth',bn:'পার্থ'}],a:1},
+ {q:{en:'Which is the largest country in the world by area?',bn:'আয়তনে বিশ্বের বৃহত্তম দেশ কোনটি?'},o:[{en:'Canada',bn:'কানাডা'},{en:'China',bn:'চীন'},{en:'Russia',bn:'রাশিয়া'},{en:'United States',bn:'যুক্তরাষ্ট্র'}],a:2},
+ {q:{en:'Which is the largest ocean?',bn:'বৃহত্তম মহাসাগর কোনটি?'},o:[{en:'Atlantic Ocean',bn:'আটলান্টিক মহাসাগর'},{en:'Indian Ocean',bn:'ভারত মহাসাগর'},{en:'Arctic Ocean',bn:'আর্কটিক মহাসাগর'},{en:'Pacific Ocean',bn:'প্রশান্ত মহাসাগর'}],a:3},
+ {q:{en:'Which is the highest mountain above sea level?',bn:'সমুদ্রপৃষ্ঠ থেকে সবচেয়ে উঁচু পর্বত কোনটি?'},o:[{en:'K2',bn:'কে-টু'},{en:'Kangchenjunga',bn:'কাঞ্চনজঙ্ঘা'},{en:'Mount Everest',bn:'মাউন্ট এভারেস্ট'},{en:'Mont Blanc',bn:'মঁ ব্লাঁ'}],a:2},
+ {q:{en:'Which is the largest hot desert in the world?',bn:'বিশ্বের বৃহত্তম উষ্ণ মরুভূমি কোনটি?'},o:[{en:'Sahara',bn:'সাহারা'},{en:'Gobi',bn:'গোবি'},{en:'Arabian Desert',bn:'আরব মরুভূমি'},{en:'Kalahari',bn:'কালাহারি'}],a:0},
+ {q:{en:'What is the capital of Japan?',bn:'জাপানের রাজধানী কোনটি?'},o:[{en:'Osaka',bn:'ওসাকা'},{en:'Kyoto',bn:'কিয়োটো'},{en:'Tokyo',bn:'টোকিও'},{en:'Nagoya',bn:'নাগোয়া'}],a:2},
+ {q:{en:'Which country has the largest population?',bn:'কোন দেশের জনসংখ্যা সবচেয়ে বেশি?'},o:[{en:'India',bn:'ভারত'},{en:'China',bn:'চীন'},{en:'United States',bn:'যুক্তরাষ্ট্র'},{en:'Indonesia',bn:'ইন্দোনেশিয়া'}],a:0},
+ {q:{en:'What is the capital of Canada?',bn:'কানাডার রাজধানী কোনটি?'},o:[{en:'Toronto',bn:'টরন্টো'},{en:'Vancouver',bn:'ভ্যাঙ্কুভার'},{en:'Montreal',bn:'মন্ট্রিয়াল'},{en:'Ottawa',bn:'অটোয়া'}],a:3},
+ {q:{en:'Which is the smallest country in the world?',bn:'বিশ্বের ক্ষুদ্রতম দেশ কোনটি?'},o:[{en:'Monaco',bn:'মোনাকো'},{en:'Vatican City',bn:'ভ্যাটিকান সিটি'},{en:'San Marino',bn:'সান মারিনো'},{en:'Malta',bn:'মাল্টা'}],a:1},
+ {q:{en:'Which continent has the most countries?',bn:'কোন মহাদেশে দেশের সংখ্যা সবচেয়ে বেশি?'},o:[{en:'Asia',bn:'এশিয়া'},{en:'Europe',bn:'ইউরোপ'},{en:'Africa',bn:'আফ্রিকা'},{en:'South America',bn:'দক্ষিণ আমেরিকা'}],a:2},
+ {q:{en:'What is the capital of Brazil?',bn:'ব্রাজিলের রাজধানী কোনটি?'},o:[{en:'Rio de Janeiro',bn:'রিও ডি জেনিরো'},{en:'São Paulo',bn:'সাও পাউলো'},{en:'Brasília',bn:'ব্রাসিলিয়া'},{en:'Salvador',bn:'সালভাদর'}],a:2},
+ {q:{en:'Which country has the longest coastline in the world?',bn:'কোন দেশের উপকূলরেখা বিশ্বে সবচেয়ে দীর্ঘ?'},o:[{en:'Canada',bn:'কানাডা'},{en:'Russia',bn:'রাশিয়া'},{en:'Australia',bn:'অস্ট্রেলিয়া'},{en:'Indonesia',bn:'ইন্দোনেশিয়া'}],a:0},
+ {q:{en:'The Sundarbans, the largest mangrove forest, is shared by Bangladesh and which country?',bn:'বিশ্বের বৃহত্তম ম্যানগ্রোভ বন সুন্দরবন বাংলাদেশ ও কোন দেশের মধ্যে অবস্থিত?'},o:[{en:'Myanmar',bn:'মিয়ানমার'},{en:'Nepal',bn:'নেপাল'},{en:'India',bn:'ভারত'},{en:'Bhutan',bn:'ভুটান'}],a:2},
+ {q:{en:'Which is the deepest ocean trench?',bn:'গভীরতম মহাসাগরীয় খাত কোনটি?'},o:[{en:'Mariana Trench',bn:'মারিয়ানা খাত'},{en:'Puerto Rico Trench',bn:'পুয়ের্তো রিকো খাত'},{en:'Java Trench',bn:'জাভা খাত'},{en:'Tonga Trench',bn:'টোঙ্গা খাত'}],a:0},
+ {q:{en:'What is the capital of Turkey?',bn:'তুরস্কের রাজধানী কোনটি?'},o:[{en:'Istanbul',bn:'ইস্তাম্বুল'},{en:'Ankara',bn:'আঙ্কারা'},{en:'Izmir',bn:'ইজমির'},{en:'Bursa',bn:'বুরসা'}],a:1},
+ {q:{en:'Which is the largest island in the world (not counting continents)?',bn:'মহাদেশ বাদে বিশ্বের বৃহত্তম দ্বীপ কোনটি?'},o:[{en:'Madagascar',bn:'মাদাগাস্কার'},{en:'Borneo',bn:'বোর্নিও'},{en:'New Guinea',bn:'নিউ গিনি'},{en:'Greenland',bn:'গ্রিনল্যান্ড'}],a:3},
+ {q:{en:'Which strait separates Europe from Africa at the western end of the Mediterranean?',bn:'ভূমধ্যসাগরের পশ্চিম প্রান্তে কোন প্রণালী ইউরোপ ও আফ্রিকাকে আলাদা করেছে?'},o:[{en:'Strait of Hormuz',bn:'হরমুজ প্রণালী'},{en:'Strait of Malacca',bn:'মালাক্কা প্রণালী'},{en:'Strait of Gibraltar',bn:'জিব্রাল্টার প্রণালী'},{en:'Bering Strait',bn:'বেরিং প্রণালী'}],a:2},
+ {q:{en:'Which river flows through Paris?',bn:'প্যারিসের মধ্য দিয়ে কোন নদী বয়ে গেছে?'},o:[{en:'Thames',bn:'টেমস'},{en:'Danube',bn:'দানিউব'},{en:'Rhine',bn:'রাইন'},{en:'Seine',bn:'সেন'}],a:3},
+ {q:{en:'What is the capital of Kenya?',bn:'কেনিয়ার রাজধানী কোনটি?'},o:[{en:'Mombasa',bn:'মোম্বাসা'},{en:'Nairobi',bn:'নাইরোবি'},{en:'Kampala',bn:'কাম্পালা'},{en:'Addis Ababa',bn:'আদ্দিস আবাবা'}],a:1},
+ {q:{en:'In which country is Machu Picchu?',bn:'মাচু পিচু কোন দেশে অবস্থিত?'},o:[{en:'Peru',bn:'পেরু'},{en:'Mexico',bn:'মেক্সিকো'},{en:'Chile',bn:'চিলি'},{en:'Colombia',bn:'কলম্বিয়া'}],a:0}
+];
