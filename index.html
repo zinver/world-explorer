@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>My Travel Map</title>
-<meta name="description" content="Colour in the districts of Bangladesh and the countries of the world you have visited, plan where to go next, and download a picture of your travels.">
+<meta name="description" content="Colour in the districts of Bangladesh, the states of Malaysia and the countries of the world you have visited. Plan trips, review countries, share YouTube videos and download a picture of your travels.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -127,6 +127,8 @@ noscript style{display:none}
       <div class="feat rv" style="--d:.1s"><h3 data-t="f4t"></h3><p data-t="f4"></p></div>
       <div class="feat rv"><h3 data-t="f5t"></h3><p data-t="f5"></p></div>
       <div class="feat rv" style="--d:.1s"><h3 data-t="f6t"></h3><p data-t="f6"></p></div>
+      <div class="feat rv"><h3 data-t="f7t"></h3><p data-t="f7"></p></div>
+      <div class="feat rv" style="--d:.1s"><h3 data-t="f8t"></h3><p data-t="f8"></p></div>
     </div>
   </section>
 
@@ -158,42 +160,50 @@ const T = {
  en:{
   title:'My Travel Map', brand:'My Travel Map', start:'Start my map', see:'See how it works',
   h1:"Colour in the places you've been.",
-  lead:'Pick the districts of Bangladesh and the countries of the world you have visited. Get a picture of your travels that you can download and share.',
+  lead:'Pick the districts of Bangladesh, the states of Malaysia and the countries of the world you have visited. Get a picture of your travels that you can download and share.',
   example:'Example map', legV:'Visited', legP:'Want to visit',
   whatT:'What you can do',
-  f1t:'Bangladesh map', f1:'All 64 districts, grouped into the 8 divisions. Tap a district on the map or choose it from a list.',
-  f2t:'World map', f2:'194 countries. See it flat, or spin it as a 3D globe with your mouse or finger.',
-  f3t:'Trip plan', f3:'Mark the countries you want to visit next. They appear in a second colour beside the places you have already been.',
-  f4t:'World quiz', f4:'20 multiple-choice questions about the world, in a new random order every time.',
-  f5t:'Your picture', f5:'Choose a colour theme, add your name and photo, then download it as PNG, JPG or PDF.',
-  f6t:'English and Bangla', f6:'The whole website, the place names and your downloaded picture work in both languages.',
+  f1t:'Bangladesh map', f1:'All 64 districts, grouped into the 8 divisions. Open a division, tap a district on the map, or search by name.',
+  f2t:'Malaysia map', f2:'All 13 states and 3 federal territories, grouped into Peninsular Malaysia, East Malaysia and Federal Territories.',
+  f3t:'World map', f3:'194 countries grouped by continent. See it flat and zoom in, or spin it as a 3D globe with your mouse or finger.',
+  f4t:'Trip plan', f4:'Mark the countries you want to visit next. They appear in a second colour beside the places you have already been.',
+  f5t:'Country reviews', f5:'Rate countries you have visited from 1 to 5 stars, add up to 10 photos, and read what other travellers say about any country.',
+  f6t:'YouTube videos', f6:'Add YouTube links to countries you have visited. Visitors tap the country on your globe and watch your videos right there.',
+  f7t:'Your picture',
+  f7:'Choose a colour theme, add your name and photo, then download it as PNG, JPG or PDF.',
+  f8t:'English, Bangla and dark mode',
+  f8:'The whole website, the place names and your downloaded picture work in English and Bangla, in light or dark.',
   howT:'How it works',
-  s1t:'Pick your places', s1:'Search the list or tap the map. Choose the places you have been to and the ones you want to visit.',
+  s1t:'Pick your places', s1:'Search the list, open a group, or tap the map. Choose the places you have been to and the ones you want to visit.',
   s2t:'Make it yours', s2:'Pick a colour theme, then add your name and photo if you like.',
   s3t:'Download or share', s3:'Save the picture, or send your personal link to friends and family.',
-  linkT:'Your own link, no login',
-  linkP:'Every map gets its own link. Send it to anyone and they can see where you have been and where you want to go. If you sign in with Google, your map is saved to your account and stays with you on every device.',
-  ctaT:'Ready to colour in your map?', foot:'Bangladesh and world travel maps'
+  linkT:'Your own link',
+  linkP:'Making a map needs no login. Every map gets its own link: anyone who opens it sees your world globe, your reviews and your videos. Sign in with Google to save your map to your account, write reviews and add YouTube videos.',
+  ctaT:'Ready to colour in your map?', foot:'Bangladesh, Malaysia and world travel maps'
  },
  bn:{
   title:'আমার ভ্রমণ মানচিত্র', brand:'আমার ভ্রমণ মানচিত্র', start:'আমার মানচিত্র শুরু করুন', see:'কীভাবে কাজ করে দেখুন',
   h1:'যেসব জায়গা ঘুরেছেন, সেগুলো রঙ করুন।',
-  lead:'বাংলাদেশের যে জেলা আর বিশ্বের যে দেশগুলো ঘুরেছেন সেগুলো বেছে নিন। আপনার ভ্রমণের একটি ছবি পাবেন, যা ডাউনলোড ও শেয়ার করা যায়।',
+  lead:'বাংলাদেশের জেলা, মালয়েশিয়ার রাজ্য আর বিশ্বের যে দেশগুলো ঘুরেছেন সেগুলো বেছে নিন। আপনার ভ্রমণের একটি ছবি পাবেন, যা ডাউনলোড ও শেয়ার করা যায়।',
   example:'উদাহরণ মানচিত্র', legV:'ঘোরা হয়েছে', legP:'ঘুরতে চাই',
   whatT:'যা যা করতে পারবেন',
-  f1t:'বাংলাদেশের মানচিত্র', f1:'৬৪টি জেলা, ৮টি বিভাগে সাজানো। মানচিত্রে জেলায় ট্যাপ করুন অথবা তালিকা থেকে বেছে নিন।',
-  f2t:'বিশ্বের মানচিত্র', f2:'১৯৪টি দেশ। সমতল মানচিত্রে দেখুন, অথবা মাউস বা আঙুলে ঘুরিয়ে ৩ডি গ্লোবে দেখুন।',
-  f3t:'ট্রিপ প্ল্যান', f3:'পরে যে দেশগুলোতে ঘুরতে চান সেগুলো চিহ্নিত করুন। যেসব জায়গা ঘুরেছেন তার পাশে এগুলো আলাদা রঙে দেখা যাবে।',
-  f4t:'বিশ্ব কুইজ', f4:'বিশ্ব নিয়ে ২০টি বহুনির্বাচনি প্রশ্ন, প্রতিবার নতুন এলোমেলো ক্রমে।',
-  f5t:'আপনার ছবি', f5:'রঙের থিম বেছে নিন, নাম ও ছবি যোগ করুন, তারপর PNG, JPG বা PDF হিসেবে ডাউনলোড করুন।',
-  f6t:'ইংরেজি ও বাংলা', f6:'পুরো ওয়েবসাইট, জায়গার নাম এবং ডাউনলোড করা ছবি—দুই ভাষাতেই কাজ করে।',
+  f1t:'বাংলাদেশের মানচিত্র', f1:'৬৪টি জেলা, ৮টি বিভাগে সাজানো। বিভাগ খুলুন, মানচিত্রে জেলায় ট্যাপ করুন, অথবা নাম লিখে খুঁজুন।',
+  f2t:'মালয়েশিয়ার মানচিত্র', f2:'১৩টি রাজ্য ও ৩টি ফেডারেল টেরিটরি—পেনিনসুলার মালয়েশিয়া, ইস্ট মালয়েশিয়া ও ফেডারেল টেরিটরিতে সাজানো।',
+  f3t:'বিশ্বের মানচিত্র', f3:'মহাদেশ অনুযায়ী সাজানো ১৯৪টি দেশ। সমতল মানচিত্রে জুম করুন, অথবা মাউস বা আঙুলে ঘুরিয়ে ৩ডি গ্লোবে দেখুন।',
+  f4t:'ট্রিপ প্ল্যান', f4:'পরে যে দেশগুলোতে ঘুরতে চান সেগুলো চিহ্নিত করুন। যেসব জায়গা ঘুরেছেন তার পাশে আলাদা রঙে দেখা যাবে।',
+  f5t:'দেশের রিভিউ', f5:'ঘুরে আসা দেশগুলোকে ১ থেকে ৫ স্টারে রেটিং দিন, ১০টি পর্যন্ত ছবি যোগ করুন এবং যেকোনো দেশ নিয়ে অন্য ভ্রমণকারীরা কী বলছেন পড়ুন।',
+  f6t:'ইউটিউব ভিডিও', f6:'ঘুরে আসা দেশে ইউটিউব লিংক যোগ করুন। দর্শক আপনার গ্লোবে দেশে ট্যাপ করে সেখানেই আপনার ভিডিও দেখতে পারবে।',
+  f7t:'আপনার ছবি',
+  f7:'রঙের থিম বেছে নিন, নাম ও ছবি যোগ করুন, তারপর PNG, JPG বা PDF হিসেবে ডাউনলোড করুন।',
+  f8t:'ইংরেজি, বাংলা ও ডার্ক মোড',
+  f8:'পুরো ওয়েবসাইট, জায়গার নাম এবং ডাউনলোড করা ছবি ইংরেজি ও বাংলা—দুই ভাষাতেই, লাইট বা ডার্ক মোডে কাজ করে।',
   howT:'কীভাবে কাজ করে',
-  s1t:'জায়গাগুলো বেছে নিন', s1:'তালিকায় খুঁজুন বা মানচিত্রে ট্যাপ করুন। যেখানে গেছেন আর যেখানে যেতে চান, বেছে নিন।',
+  s1t:'জায়গাগুলো বেছে নিন', s1:'তালিকায় খুঁজুন, গ্রুপ খুলুন বা মানচিত্রে ট্যাপ করুন। যেখানে গিয়েছেন আর যেখানে যেতে চান সেগুলো বেছে নিন।',
   s2t:'নিজের মতো সাজান', s2:'একটি রঙের থিম বেছে নিন, চাইলে নাম ও ছবি যোগ করুন।',
   s3t:'ডাউনলোড বা শেয়ার করুন', s3:'ছবিটি সেভ করুন, অথবা বন্ধু ও পরিবারকে আপনার নিজস্ব লিংক পাঠান।',
-  linkT:'নিজের লিংক, লগইন ছাড়াই',
-  linkP:'প্রতিটি মানচিত্র নিজস্ব লিংক পায়। যে কাউকে পাঠালে তারা দেখতে পাবে আপনি কোথায় গেছেন আর কোথায় যেতে চান। গুগল দিয়ে সাইন ইন করলে মানচিত্র আপনার অ্যাকাউন্টে সেভ থাকবে এবং সব ডিভাইসে পাবেন।',
-  ctaT:'আপনার মানচিত্র রঙ করতে প্রস্তুত?', foot:'বাংলাদেশ ও বিশ্বের ভ্রমণ মানচিত্র'
+  linkT:'নিজের লিংক',
+  linkP:'মানচিত্র বানাতে লগইন লাগে না। প্রতিটি মানচিত্র নিজস্ব লিংক পায়: যে কেউ খুললে আপনার বিশ্ব গ্লোব, রিভিউ ও ভিডিও দেখতে পাবে। গুগল দিয়ে সাইন ইন করলে মানচিত্র আপনার অ্যাকাউন্টে সেভ হয়, আর রিভিউ লেখা ও ইউটিউব ভিডিও যোগ করা যায়।',
+  ctaT:'আপনার মানচিত্র রঙ করতে প্রস্তুত?', foot:'বাংলাদেশ, মালয়েশিয়া ও বিশ্বের ভ্রমণ মানচিত্র'
  }
 };
 const $ = id => document.getElementById(id);
