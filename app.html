@@ -44,6 +44,10 @@ input[type=search],input[type=text]{color:var(--ink);width:100%;border:1px solid
 .lnk{background:none;border:0;padding:0;font:inherit;color:var(--mut);text-decoration:underline;text-underline-offset:3px}
 .grp{border-top:1px solid var(--line);margin-top:14px;padding-top:14px}
 .grp .row{margin-bottom:10px}
+.grp:not(.open) .row{margin-bottom:0}
+.gh{display:flex;align-items:center;gap:8px;border:0;background:none;padding:6px 0;font-family:inherit;color:var(--ink);flex:1;text-align:left;cursor:pointer}
+.chev{width:9px;height:9px;border-right:2.5px solid var(--mut);border-bottom:2.5px solid var(--mut);transform:rotate(-45deg);transition:transform .15s;margin:0 4px 3px 2px;flex:none}
+.open .chev{transform:rotate(45deg)}
 .grp b{font-size:16px}.grp small{color:var(--mut);font-weight:700;margin-left:4px}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{border:0;background:var(--chip);color:var(--ink);border-radius:999px;padding:12px 18px;font:inherit}
@@ -157,7 +161,7 @@ a.home{color:inherit;text-decoration:none}
 
   <div class="panel" id="cardPanel">
     <div id="geoErr" class="err hide"></div>
-    <div class="vsw hide" id="interSwitch"><button data-m="pick" data-i="p_pick"></button><button data-m="posts" data-i="p_posts"></button></div>
+    <div class="vsw hide" id="interSwitch"><button data-m="pick" data-i="p_pick"></button><button data-m="posts" data-i="p_posts"></button><button data-m="videos" data-i="v_videos"></button></div>
     <div id="postBar" class="hide"><button class="btn" id="newPost" data-i="p_write"></button></div>
     <div class="vsw hide" id="viewSwitch"><button data-v="flat" data-i="viewFlat"></button><button data-v="globe" data-i="viewGlobe"></button></div>
     <div id="cardBox"><div id="card"></div><div id="zoomCtl" class="zc"><button id="zIn" aria-label="Zoom in">+</button><button id="zOut" aria-label="Zoom out">−</button><button id="zReset" aria-label="Reset zoom" disabled>⟲</button></div></div>
@@ -484,6 +488,7 @@ function groups(){
   if(S.tab==='my') return L.MYG.map(g=>({key:g.name, name:nm(g.name), items:g.s}));
   return S.tab==='bd' ? L.DIV.map(d=>({key:d.name, name:divName(d.name), items:d.d})) : L.CONT.map(c=>({key:c.name, name:nm(c.name), items:c.c}));
 }
+const OPEN = new Set();
 function renderPicker(){
   const bd = S.tab==='bd', my = S.tab==='my', rv = S.tab==='review', set = rv ? PostsUI.reviewed() : (S[S.tab] || S.world), q = $('q').value.trim().toLowerCase();
   $('pickTitle').textContent = tr(rv ? 'revTitle' : my ? 'statesTitle' : bd ? 'distTitle' : S.tab==='plan' ? 'planTitle' : 'ctyTitle');
@@ -497,9 +502,10 @@ function renderPicker(){
     const n = g.items.filter(x=>set.has(x)).length;
     const shown = g.items.filter(x=>!q || x.toLowerCase().includes(q) || (BN[x]||'').includes(q));
     if(!shown.length) return '';
-    return `<div class="grp"><div class="row"><span><b>${esc(g.name)}</b><small>${dig(n)}/${dig(g.items.length)}</small></span>
+    const key = S.tab + '|' + g.key, open = !!q || OPEN.has(key);
+    return `<div class="grp${open ? ' open' : ''}"><div class="row"><button class="gh" data-tg="${esc(key)}" aria-expanded="${open}"><i class="chev"></i><b>${esc(g.name)}</b><small>${dig(n)}/${dig(g.items.length)}</small></button>
       ${rv ? '' : `<button class="lnk" data-g="${esc(g.key)}">${tr(n===g.items.length?'clear':'selAll')}</button>`}</div>
-      <div class="chips">${shown.map(x=>`<button class="chip${set.has(x)?' on':''}${S.tab==='plan'?' plan':''}${S.tab==='plan'&&S.world.has(x)?' dis':''}" data-k="${esc(x)}"${S.tab==='plan'&&S.world.has(x)?' disabled':''}>${esc(nm(x))}${rv && set.has(x) ? `<small>★${dig((PostsUI.avg(x)||0).toFixed(1))}</small>` : ''}</button>`).join('')}</div></div>`;
+      ${open ? `<div class="chips">${shown.map(x=>`<button class="chip${set.has(x)?' on':''}${S.tab==='plan'?' plan':''}${S.tab==='plan'&&S.world.has(x)?' dis':''}" data-k="${esc(x)}"${S.tab==='plan'&&S.world.has(x)?' disabled':''}>${esc(nm(x))}${rv && set.has(x) ? `<small>★${dig((PostsUI.avg(x)||0).toFixed(1))}</small>` : ''}</button>`).join('')}</div>` : ''}</div>`;
   }).join('');
 }
 function addK(k){ const s=S[S.tab]; if(S.tab==='plan' && S.world.has(k)) return; s.add(k); if(S.tab==='world') S.plan.delete(k); }
@@ -719,6 +725,7 @@ function wire(){
   $('selAll').onclick = () => { groups().forEach(g=>g.items.forEach(addK)); changed(); };
   $('clrAll').onclick = () => { S[S.tab].clear(); changed(); };
   $('groups').onclick = e => {
+    const tg = e.target.closest('[data-tg]'); if(tg){ const k=tg.dataset.tg; OPEN.has(k) ? OPEN.delete(k) : OPEN.add(k); return renderPicker(); }
     const c = e.target.closest('.chip'); if(c) return S.tab==='review' ? PostsUI.openReview(c.dataset.k) : toggle(c.dataset.k);
     const g = e.target.closest('[data-g]'); if(!g) return;
     const grp = groups().find(x=>x.key===g.dataset.g), s=S[S.tab];

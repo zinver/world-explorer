@@ -11,6 +11,12 @@ const MAXPH = 10;
 
 /* ---------- strings ---------- */
 Object.assign(I18N.en, {
+  v_videos:'Videos', v_add:'+ Add video', v_url:'Paste a YouTube link', v_title:'Title (optional)', v_none:'No videos for this country yet.',
+  v_bad:'That does not look like a YouTube link.', v_dup:'This video is already added.', v_max:'You can add up to 20 videos per country.',
+  v_failed:'Could not save the video. Check your connection and that this country is in your saved visited list.',
+  v_open:'Open on YouTube', v_byOwner:'Videos by this traveller', v_cnt:'videos',
+  v_tipOwner:'Tap a visited country to add or watch your YouTube videos. A blue badge means it has videos.',
+  v_tipView:'Tap a country with a blue badge to watch this traveller’s videos.',
   rev:'Reviews', revTitle:'Pick a country', revCnt:'with reviews',
   p_pick:'Pick places', p_posts:'My reviews', p_write:'✎ Write a review',
   p_tipOwner:'Tap a visited country to read or write your reviews. A red badge means it has your reviews.',
@@ -35,6 +41,12 @@ Object.assign(I18N.en, {
   p_failed:'Could not save. Check your connection and that this country is in your saved visited list, then try again.', p_full:'Storage is full. Remove a photo or delete old reviews.', p_edited:'edited', p_owner:'Owner'
 });
 Object.assign(I18N.bn, {
+  v_videos:'ভিডিও', v_add:'+ ভিডিও যোগ করুন', v_url:'ইউটিউব লিংক পেস্ট করুন', v_title:'শিরোনাম (ঐচ্ছিক)', v_none:'এই দেশের কোনো ভিডিও এখনো নেই।',
+  v_bad:'এটি ইউটিউব লিংক মনে হচ্ছে না।', v_dup:'এই ভিডিও আগেই যোগ করা হয়েছে।', v_max:'প্রতি দেশে সর্বোচ্চ ২০টি ভিডিও যোগ করা যায়।',
+  v_failed:'ভিডিও সেভ করা যায়নি। ইন্টারনেট দেখুন এবং দেশটি আপনার সেভ করা ভিজিটেড তালিকায় আছে কিনা দেখুন।',
+  v_open:'ইউটিউবে খুলুন', v_byOwner:'এই ভ্রমণকারীর ভিডিও', v_cnt:'টি ভিডিও',
+  v_tipOwner:'ভিজিট করা দেশে ট্যাপ করে আপনার ইউটিউব ভিডিও যোগ করুন বা দেখুন। নীল ব্যাজ মানে ভিডিও আছে।',
+  v_tipView:'এই ভ্রমণকারীর ভিডিও দেখতে নীল ব্যাজ দেওয়া দেশে ট্যাপ করুন।',
   rev:'রিভিউ', revTitle:'দেশ বাছুন', revCnt:'টিতে রিভিউ আছে',
   p_pick:'জায়গা বাছুন', p_posts:'আমার রিভিউ', p_write:'✎ রিভিউ লিখুন',
   p_tipOwner:'রিভিউ পড়তে বা লিখতে ঘোরা দেশে ট্যাপ করুন। লাল ব্যাজ মানে সেখানে আপনার রিভিউ আছে।',
@@ -66,7 +78,15 @@ css.textContent = `
 #postBar{margin:0 0 12px}
 #postBar .btn{width:100%}
 .pm{cursor:pointer}
-#pSheet{z-index:25}
+#pSheet,#vSheet{z-index:25}
+#vSheet .sheetBox{max-width:600px;min-height:50vh}
+.vadd input{margin:0 0 8px!important}
+.vid{margin:16px 0}
+.vthumb{position:relative;display:block;width:100%;aspect-ratio:16/9;border:0;border-radius:14px;background:#000 center/cover;cursor:pointer;padding:0}
+.vthumb span{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:42px;text-shadow:0 2px 10px #000a}
+.vframe{display:block;width:100%;aspect-ratio:16/9;border:0;border-radius:14px;background:#000}
+.vmeta{display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-top:6px;font-size:14px}
+.vmeta a{color:var(--acc)}
 #pSheet .sheetBox{max-width:600px;min-height:50vh}
 .stars{display:inline-block;font-size:18px;letter-spacing:2px;line-height:1;background:linear-gradient(90deg,#f5a623 var(--p),#9aa0a6aa var(--p));-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
 .rsum{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:6px 0 12px}
@@ -180,12 +200,15 @@ const SBStore = {
 const Store = new Proxy({}, {get:(_, k) => (typeof SUPABASE_URL === 'string' && SUPABASE_URL.indexOf('YOUR-PROJECT') >= 0 ? LocalStore : SBStore)[k].bind(typeof SUPABASE_URL === 'string' && SUPABASE_URL.indexOf('YOUR-PROJECT') >= 0 ? LocalStore : SBStore)});
 
 /* ---------- state ---------- */
+const PV = {counts:{}, cur:null, list:[], err:''};
 const PU = {m:'pick', counts:{world:{}}, avg:{}, cur:null, posts:[], view:'list', open:new Set(), c:null, err:'', sort:'new', _rv:null};
 const demo = () => typeof SUPABASE_URL === 'string' && SUPABASE_URL.indexOf('YOUR-PROJECT') >= 0;
 const ownerId = () => viewId || (me && me.id) || 'local';
 const isRV = () => S.tab === 'review';
 const kindOk = () => S.tab === 'world' || isRV();
-const active = () => isRV() || (S.tab === 'world' && (mode === 'viewer' || PU.m === 'posts'));
+const isVD = () => S.tab === 'world' && PU.m === 'videos';
+const curM = () => (mode === 'viewer' && PU.m === 'pick') ? 'posts' : PU.m;
+const active = () => isRV() || (S.tab === 'world' && (mode === 'viewer' || PU.m === 'posts' || PU.m === 'videos'));
 const demoName = () => { try{ return localStorage.getItem('tm_demo_name') || S.name || ''; }catch(_){ return S.name || ''; } };
 function who(){
   if(user){ const md = user.user_metadata || {}; return {id:user.id, name:md.name || md.full_name || (user.email || '').split('@')[0] || 'User'}; }
@@ -205,23 +228,23 @@ function toast(msg){
 function decorate(){
   if(!kindOk() || !G.world) return;
   const g = document.querySelector('#card #mapZ') || document.querySelector('#card svg g'); if(!g) return;
-  const rv = isRV(), cnt = PU.counts.world || {}, by = new Map(G.world.items.map(i => [i.k, i]));
+  const rv = isRV(), vd = isVD(), cnt = (vd ? PV.counts : PU.counts.world) || {}, by = new Map(G.world.items.map(i => [i.k, i]));
   let out = '';
   for(const k in cnt){
     const i = by.get(k); if(!i || (!rv && !S.world.has(k)) || !isFinite(i.c[0])) continue;
     const x = i.c[0], y = i.c[1] - 30, txt = rv ? avgTxt(PU.avg[k] || 0) : dig(cnt[k]);
-    out += `<g class="pm" data-k="${h(k)}"><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${rv ? 23 : 19}" fill="${rv ? '#f5a623' : '#e11d48'}" stroke="#fff" stroke-width="4"/><text x="${x.toFixed(1)}" y="${(y+7).toFixed(1)}" text-anchor="middle" font-size="${rv ? 19 : 21}" font-weight="800" fill="${rv ? '#1a1a1a' : '#fff'}" pointer-events="none">${txt}</text></g>`;
+    out += `<g class="pm" data-k="${h(k)}"><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${rv ? 23 : 19}" fill="${rv ? '#f5a623' : vd ? '#2563eb' : '#e11d48'}" stroke="#fff" stroke-width="4"/><text x="${x.toFixed(1)}" y="${(y+7).toFixed(1)}" text-anchor="middle" font-size="${rv ? 19 : 21}" font-weight="800" fill="${rv ? '#1a1a1a' : '#fff'}" pointer-events="none">${txt}</text></g>`;
   }
   if(out) g.insertAdjacentHTML('beforeend', out);
 }
 function globeMarks(ctx, proj, center){
   if(!kindOk() || !G.globe) return;
-  const rv = isRV(), cnt = PU.counts.world || {}; if(PU._gs !== G.globe){ PU._gs = G.globe; PU._gm = new Map(G.globe.filter(c => c.k).map(c => [c.k, c])); }
+  const rv = isRV(), vd = isVD(), cnt = (vd ? PV.counts : PU.counts.world) || {}; if(PU._gs !== G.globe){ PU._gs = G.globe; PU._gm = new Map(G.globe.filter(c => c.k).map(c => [c.k, c])); }
   ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '800 11px system-ui, sans-serif';
   for(const k in cnt){
     const c = PU._gm.get(k); if(!c || (!rv && !S.world.has(k)) || !isFinite(c.c[0]) || d3.geoDistance(c.c, center) > 1.35) continue;
     const p = proj(c.c); if(!p) continue;
-    ctx.beginPath(); ctx.arc(p[0], p[1] - 16, rv ? 12 : 10, 0, 6.2832); ctx.fillStyle = rv ? '#f5a623' : '#e11d48'; ctx.fill();
+    ctx.beginPath(); ctx.arc(p[0], p[1] - 16, rv ? 12 : 10, 0, 6.2832); ctx.fillStyle = rv ? '#f5a623' : vd ? '#2563eb' : '#e11d48'; ctx.fill();
     ctx.lineWidth = 2.5; ctx.strokeStyle = '#fff'; ctx.stroke();
     ctx.fillStyle = rv ? '#1a1a1a' : '#fff'; ctx.fillText(rv ? avgTxt(PU.avg[k] || 0) : dig(cnt[k]), p[0], p[1] - 15.5);
   }
@@ -232,26 +255,32 @@ const avgOf = k => PU.avg[k] || 0;
 async function refresh(){
   PU._rv = isRV();
   try{ const c = await Store.counts(PU._rv ? null : ownerId()); PU.counts = {world:c.n}; PU.avg = c.avg; }catch(_){ PU.counts = {world:{}}; PU.avg = {}; }
+  if(!PU._rv){ try{ PV.counts = await VStore.counts(ownerId()); }catch(_){ PV.counts = {}; } }
+  fixLabels();
   if(typeof renderCard === 'function') renderCard();
   if(typeof renderPicker === 'function') renderPicker();
 }
 
 /* ---------- switch (Pick places | My reviews) ---------- */
 function sync(){
-  const own = mode === 'owner', show = own && S.tab === 'world';
+  const own = mode === 'owner', show = S.tab === 'world';
   const sw = $('interSwitch'); if(!sw) return;
   sw.classList.toggle('hide', !show);
-  sw.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.m === PU.m));
-  $('postBar').classList.toggle('hide', !(show && PU.m === 'posts'));
+  const pk = sw.querySelector('[data-m=pick]'); if(pk) pk.classList.toggle('hide', !own);
+  fixLabels();
+  sw.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.m === curM()));
+  $('postBar').classList.toggle('hide', !(show && own && PU.m === 'posts'));
   if(PU._rv !== isRV()) refresh();   // the badges come from a different source on the Reviews tab
   setTip();
 }
-function setM(m){ PU.m = m; sync(); }
-function tipText(){ return tr(isRV() ? 'p_tipReview' : mode === 'owner' ? 'p_tipOwner' : 'p_tipView'); }
+function fixLabels(){ const b = document.querySelector('#interSwitch [data-m=posts]'); if(b) b.textContent = tr(mode === 'viewer' ? 'rev' : 'p_posts'); }
+function setM(m){ PU.m = m; sync(); if(typeof renderCard === 'function') renderCard(); }
+function tipText(){ if(isVD()) return tr(mode === 'owner' ? 'v_tipOwner' : 'v_tipView'); return tr(isRV() ? 'p_tipReview' : mode === 'owner' ? 'p_tipOwner' : 'p_tipView'); }
 
 /* ---------- tap on a country ---------- */
 function tap(k){
   if(!active()) return false;
+  if(isVD()){ openVideos(k); return true; }
   if(isRV()){ openPlace(k, 'all'); return true; }
   if(!S.world.has(k)){ if(mode === 'owner') toast(tr('p_notVisited')); return true; }
   openPlace(k, 'owner'); return true;
@@ -427,6 +456,94 @@ function shrink(f){
     }; img.src = r.result; };
     r.readAsDataURL(f);
   });
+}
+
+/* ---------- YouTube videos (World map only) ---------- */
+const ytId = u => { const m = (u || '').trim().match(/^(?:https?:\/\/)?(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?(?:[^#]*&)?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{11})(?![A-Za-z0-9_-])/); return m ? m[1] : ''; };
+const LocalV = {
+  _r(){ try{ return JSON.parse(localStorage.getItem('tm_videos') || '[]'); }catch(_){ return []; } },
+  _w(a){ localStorage.setItem('tm_videos', JSON.stringify(a)); },
+  async counts(owner){ const n = {}; this._r().filter(v => v.owner === owner).forEach(v => { n[v.country] = (n[v.country] || 0) + 1; }); return n; },
+  async list(owner, c){ return this._r().filter(v => v.owner === owner && v.country === c).sort((a, b) => b.at.localeCompare(a.at)); },
+  async add(v){ const a = this._r(); a.push(Object.assign({id:uid(), owner:ownerId(), at:new Date().toISOString()}, v)); this._w(a); },
+  async remove(id){ this._w(this._r().filter(v => v.id !== id)); }
+};
+const SBV = {
+  async counts(owner){
+    if(owner === 'local') return {};
+    const q = await sb.rpc('owner_video_stats', {p_map_id: owner}); if(q.error) throw q.error;
+    const n = {}; (q.data || []).forEach(r => { n[r.country] = +r.n; }); return n;
+  },
+  async list(owner, c){
+    if(owner === 'local') return [];
+    const q = await sb.rpc('owner_videos', {p_map_id: owner, p_country: c}); if(q.error) throw q.error;
+    return (q.data || []).map(r => ({id:r.id, country:r.country, vid:r.video_id, title:r.title, at:r.created_at}));
+  },
+  async add(v){ const q = await sb.from('videos').insert({country:v.country, video_id:v.vid, title:v.title || ''}); if(q.error) throw q.error; },
+  async remove(id){ const q = await sb.from('videos').delete().eq('id', id); if(q.error) throw q.error; }
+};
+const VStore = new Proxy({}, {get:(_, k) => { const t = demo() ? LocalV : SBV; return t[k].bind(t); }});
+
+function vSheet(){
+  let s = $('vSheet');
+  if(!s){
+    s = document.createElement('div'); s.id = 'vSheet'; s.className = 'sheet hide';
+    s.innerHTML = '<div class="sheetBox" id="vBox"></div>';
+    document.body.appendChild(s);
+    s.addEventListener('click', onVClick);
+    document.addEventListener('keydown', e => { if(e.key === 'Escape') closeV(); });
+  }
+  return s;
+}
+function closeV(){ const s = $('vSheet'); if(s){ s.classList.add('hide'); const b = $('vBox'); if(b) b.innerHTML = ''; } PV.cur = null; }
+async function openVideos(k){
+  if(!S.world.has(k)){ if(mode === 'owner') toast(tr('p_notVisited')); return; }
+  PV.cur = k; PV.err = ''; PV.list = []; vSheet().classList.remove('hide'); renderV();
+  try{ PV.list = await VStore.list(ownerId(), k); }catch(_){ PV.list = []; }
+  renderV();
+}
+function renderV(){
+  const box = $('vBox'); if(!box || !PV.cur) return;
+  const own = mode === 'owner', n = PV.list.length;
+  let html = `<div class="row"><h2>${h(nm(PV.cur))}</h2><button class="lnk" data-v="close">${tr('p_close')}</button></div>`;
+  html += `<div class="tip" style="text-align:left;margin:0 0 10px">${tr('v_byOwner')}${n ? ' · ' + dig(n) + ' ' + (lang === 'bn' ? '' : '') + tr('v_cnt') : ''}</div>`;
+  if(own){
+    if(who() || demo()){
+      html += `<div class="vadd"><input type="url" id="vUrl" inputmode="url" autocomplete="off" placeholder="${h(tr('v_url'))}"><input type="text" id="vTitle" maxlength="80" placeholder="${h(tr('v_title'))}">
+        ${PV.err ? `<div class="err">${h(PV.err)}</div>` : ''}<button class="btn" data-v="add" style="width:100%">${tr('v_add')}</button></div>`;
+    } else html += `<div class="pnote"><button class="btn" data-act="login" style="width:100%">${tr('p_login')}</button></div>`;
+  }
+  html += n ? PV.list.map(v => `<div class="vid" data-id="${h(v.id)}"><button class="vthumb" data-v="play" data-vid="${h(v.vid)}" aria-label="Play" style="background-image:url(https://i.ytimg.com/vi/${h(v.vid)}/hqdefault.jpg)"><span>▶</span></button>
+      <div class="vmeta"><b>${h(v.title || '')}</b><span><a href="https://youtu.be/${h(v.vid)}" target="_blank" rel="noopener">${tr('v_open')}</a>${own ? ` · <button class="lnk" data-v="del" data-id="${h(v.id)}">${tr('p_del')}</button>` : ''}</span></div></div>`).join('')
+    : `<p class="tip" style="margin:22px 0">${tr('v_none')}</p>`;
+  box.innerHTML = html;
+}
+async function onVClick(e){
+  if(e.target.closest('[data-act=login]')){ const ab = $('authBtn'); if(ab) ab.click(); return; }
+  const b = e.target.closest('[data-v]');
+  if(!b){ if(e.target.id === 'vSheet') closeV(); return; }
+  const a = b.dataset.v;
+  if(a === 'close') return closeV();
+  if(a === 'play'){
+    const f = document.createElement('iframe'); f.src = `https://www.youtube-nocookie.com/embed/${b.dataset.vid}?autoplay=1&rel=0`;
+    f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen'; f.allowFullscreen = true; f.className = 'vframe'; f.title = 'YouTube';
+    return b.replaceWith(f);
+  }
+  if(a === 'add'){
+    const id = ytId($('vUrl').value), title = $('vTitle').value.trim().slice(0, 80);
+    if(!id){ PV.err = tr('v_bad'); return renderV(); }
+    if(PV.list.some(v => v.vid === id)){ PV.err = tr('v_dup'); return renderV(); }
+    if(PV.list.length >= 20){ PV.err = tr('v_max'); return renderV(); }
+    try{ await VStore.add({country:PV.cur, vid:id, title, authorName:(who() || {}).name}); }catch(_){ PV.err = tr('v_failed'); return renderV(); }
+    PV.err = ''; PV.list = await VStore.list(ownerId(), PV.cur).catch(() => PV.list);
+    PV.counts[PV.cur] = PV.list.length; renderV(); if(typeof renderCard === 'function') renderCard(); return;
+  }
+  if(a === 'del'){
+    try{ await VStore.remove(b.dataset.id); }catch(_){ PV.err = tr('v_failed'); return renderV(); }
+    PV.list = PV.list.filter(v => v.id !== b.dataset.id);
+    if(PV.list.length) PV.counts[PV.cur] = PV.list.length; else delete PV.counts[PV.cur];
+    renderV(); if(typeof renderCard === 'function') renderCard();
+  }
 }
 
 /* ---------- wire up ---------- */
