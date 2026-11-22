@@ -80,7 +80,8 @@ css.textContent = `
 .pm{cursor:pointer}
 #pSheet,#vSheet{z-index:25}
 #vSheet .sheetBox{max-width:600px;min-height:50vh}
-.vadd input{margin:0 0 8px!important}
+.vadd input{margin:0 0 10px!important;display:block;width:100%;box-sizing:border-box;font-size:16px!important}
+.vadd .btn{display:block;width:100%;background:var(--acc)!important;color:#fff!important;font-weight:700;font-size:16px;padding:14px 22px}
 .vid{margin:16px 0}
 .vthumb{position:relative;display:block;width:100%;aspect-ratio:16/9;border:0;border-radius:14px;background:#000 center/cover;cursor:pointer;padding:0}
 .vthumb span{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:42px;text-shadow:0 2px 10px #000a}
@@ -459,7 +460,7 @@ function shrink(f){
 }
 
 /* ---------- YouTube videos (World map only) ---------- */
-const ytId = u => { const m = (u || '').trim().match(/^(?:https?:\/\/)?(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?(?:[^#]*&)?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{11})(?![A-Za-z0-9_-])/); return m ? m[1] : ''; };
+const ytId = u => { const t = (u || '').replace(/[\u200B-\u200D\u2060\uFEFF\u00A0\s<>"']+/g, ''); if(/^[A-Za-z0-9_-]{11}$/.test(t)) return t; if(!/(youtube\.com|youtu\.be|youtube-nocookie\.com)/i.test(t)) return ''; let m = t.match(/[?&#]v(?:i)?=([A-Za-z0-9_-]{11})/i) || t.match(/(?:youtu\.be|shorts|embed|live|v|e)\/([A-Za-z0-9_-]{11})/i); if(m) return m[1]; const seg = t.split(/[?#]/)[0].split('/').filter(Boolean).pop() || ''; const c = seg.replace(/[^A-Za-z0-9_-]/g, ''); return c.length >= 11 ? c.slice(0, 11) : ''; };
 const LocalV = {
   _r(){ try{ return JSON.parse(localStorage.getItem('tm_videos') || '[]'); }catch(_){ return []; } },
   _w(a){ localStorage.setItem('tm_videos', JSON.stringify(a)); },
@@ -509,7 +510,7 @@ function renderV(){
   html += `<div class="tip" style="text-align:left;margin:0 0 10px">${tr('v_byOwner')}${n ? ' · ' + dig(n) + ' ' + (lang === 'bn' ? '' : '') + tr('v_cnt') : ''}</div>`;
   if(own){
     if(who() || demo()){
-      html += `<div class="vadd"><input type="url" id="vUrl" inputmode="url" autocomplete="off" placeholder="${h(tr('v_url'))}"><input type="text" id="vTitle" maxlength="80" placeholder="${h(tr('v_title'))}">
+      html += `<div class="vadd"><input type="text" id="vUrl" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="${h(tr('v_url'))}">
         ${PV.err ? `<div class="err">${h(PV.err)}</div>` : ''}<button class="btn" data-v="add" style="width:100%">${tr('v_add')}</button></div>`;
     } else html += `<div class="pnote"><button class="btn" data-act="login" style="width:100%">${tr('p_login')}</button></div>`;
   }
@@ -530,7 +531,7 @@ async function onVClick(e){
     return b.replaceWith(f);
   }
   if(a === 'add'){
-    const id = ytId($('vUrl').value), title = $('vTitle').value.trim().slice(0, 80);
+    const id = ytId($('vUrl').value), title = '';
     if(!id){ PV.err = tr('v_bad'); return renderV(); }
     if(PV.list.some(v => v.vid === id)){ PV.err = tr('v_dup'); return renderV(); }
     if(PV.list.length >= 20){ PV.err = tr('v_max'); return renderV(); }
