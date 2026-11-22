@@ -351,8 +351,9 @@ function liteGeom(g, tol){
     out.push(r[r.length-1]);
     return out.length >= 4 ? out : r;
   };
-  if(g.type === 'Polygon') return {type:'Polygon', coordinates: g.coordinates.map(ring)};
-  if(g.type === 'MultiPolygon') return {type:'MultiPolygon', coordinates: g.coordinates.map(p => p.map(ring))};
+  const poly = p => { const q = p.map(ring), a0 = d3.geoArea({type:'Polygon', coordinates:p}), a1 = d3.geoArea({type:'Polygon', coordinates:q}); return (a1 > 2*Math.PI || Math.abs(a1 - a0) > Math.max(a0 * 0.5, 1e-4)) ? p : q; };
+  if(g.type === 'Polygon') return {type:'Polygon', coordinates: poly(g.coordinates)};
+  if(g.type === 'MultiPolygon') return {type:'MultiPolygon', coordinates: g.coordinates.map(poly)};
   return g;
 }
 function bigCentroid(f){
